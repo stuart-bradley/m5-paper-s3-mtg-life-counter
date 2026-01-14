@@ -39,10 +39,13 @@ pio run -t upload && pio device monitor  # Flash and monitor
 2. Long-press power button until back LED blinks red (download mode)
 3. Upload should auto-detect port
 
+**Note for Claude**: You cannot upload to the device directly. When you need to upload, pause and ask the user to run the upload command. The user will report back results from the serial monitor.
+
 ## Display Considerations
-- E-ink has slow refresh (~300ms full, ~100ms partial)
+- E-ink has slow refresh (~300ms full, ~100ms partial) but `display()` is async
+- `M5.Display.display()` returns immediately - refresh happens in background
 - Minimize full refreshes - use partial updates for life changes
-- M5GFX handles this via update modes
+- M5GFX handles this via update modes: `epd_quality` (full), `epd_fastest` (partial)
 - Screen is 960×540 in landscape (default rotation 1)
 
 ## Touch Handling
