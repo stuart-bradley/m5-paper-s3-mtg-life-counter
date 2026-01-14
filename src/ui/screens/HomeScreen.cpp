@@ -3,9 +3,7 @@
 #include "../../assets/icons.hpp"
 #include "../../utils/Sound.hpp"
 
-HomeScreen::HomeScreen(ScreenManager* manager)
-    : _manager(manager) {
-}
+HomeScreen::HomeScreen(ScreenManager* manager) : _manager(manager) {}
 
 void HomeScreen::onEnter() {
     setNeedsFullRedraw(true);
@@ -59,7 +57,8 @@ void HomeScreen::draw(M5GFX* gfx) {
 }
 
 bool HomeScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool released) {
-    if (!released) return pressed;
+    if (!released)
+        return pressed;
 
     Rect settingsR = getSettingsCardRect();
     if (settingsR.contains(x, y)) {

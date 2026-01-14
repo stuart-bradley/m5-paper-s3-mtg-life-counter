@@ -1,11 +1,11 @@
 #pragma once
 
 #include <functional>
-#include "Component.hpp"
 #include "../models/Player.hpp"
+#include "Component.hpp"
 
 class PlayerCard : public Component {
-public:
+   public:
     using NameTapCallback = std::function<void()>;
 
     PlayerCard(Player* player, NameTapCallback onNameTap = nullptr);
@@ -16,7 +16,7 @@ public:
     void setPlayer(Player* player);
     Player* getPlayer() { return _player; }
 
-private:
+   private:
     // Horizontal layout (wider cards)
     static constexpr int16_t BUTTON_HEIGHT = 48;
     static constexpr int16_t BUTTON_WIDTH = 80;

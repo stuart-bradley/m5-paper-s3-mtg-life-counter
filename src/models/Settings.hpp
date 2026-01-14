@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <Preferences.h>
+#include <cstdint>
 
 struct Settings {
     static constexpr uint16_t DEFAULT_SLEEP_TIMEOUT = 300;  // 5 minutes

@@ -14,7 +14,8 @@ void Button::setLabel(const char* label) {
 }
 
 void Button::draw(M5GFX* gfx) {
-    if (!isDirty()) return;
+    if (!isDirty())
+        return;
 
     int16_t x = _bounds.x;
     int16_t y = _bounds.y;

@@ -6,14 +6,14 @@
 class ScreenManager;
 
 class HomeScreen : public Screen {
-public:
+   public:
     HomeScreen(ScreenManager* manager);
 
     void onEnter() override;
     void draw(M5GFX* gfx) override;
     bool handleTouch(int16_t x, int16_t y, bool pressed, bool released) override;
 
-private:
+   private:
     static constexpr int16_t CARD_WIDTH = 180;
     static constexpr int16_t CARD_HEIGHT = 180;
     static constexpr int16_t CARD_SPACING = 40;

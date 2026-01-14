@@ -1,6 +1,6 @@
 #include "PlayerCard.hpp"
-#include "../utils/Sound.hpp"
 #include <Arduino.h>
+#include "../utils/Sound.hpp"
 
 PlayerCard::PlayerCard(Player* player, NameTapCallback onNameTap)
     : _player(player), _onNameTap(onNameTap) {
@@ -55,10 +55,12 @@ Rect PlayerCard::getButtonRect(int index) const {
             case 1:  // -1 top-left
                 return Rect(_bounds.x + BUTTON_MARGIN, centerY - btnH - vertGap / 2, btnW, btnH);
             case 2:  // +1 top-right
-                return Rect(_bounds.x + _bounds.w - BUTTON_MARGIN - btnW, centerY - btnH - vertGap / 2, btnW, btnH);
+                return Rect(_bounds.x + _bounds.w - BUTTON_MARGIN - btnW,
+                            centerY - btnH - vertGap / 2, btnW, btnH);
             case 3:  // +5 bottom-right
             default:
-                return Rect(_bounds.x + _bounds.w - BUTTON_MARGIN - btnW, centerY + vertGap / 2, btnW, btnH);
+                return Rect(_bounds.x + _bounds.w - BUTTON_MARGIN - btnW, centerY + vertGap / 2,
+                            btnW, btnH);
         }
     } else {
         // Horizontal layout: buttons in a row at the bottom
@@ -80,7 +82,8 @@ void PlayerCard::drawButton(M5GFX* gfx, Rect r, const char* label) {
 }
 
 void PlayerCard::draw(M5GFX* gfx) {
-    if (!_player) return;
+    if (!_player)
+        return;
 
     // Check if life changed
     if (_player->life != _lastLife) {
@@ -88,7 +91,8 @@ void PlayerCard::draw(M5GFX* gfx) {
         setDirty();
     }
 
-    if (!isDirty()) return;
+    if (!isDirty())
+        return;
 
     // Background
     gfx->fillRect(_bounds.x, _bounds.y, _bounds.w, _bounds.h, TFT_WHITE);
@@ -122,12 +126,15 @@ void PlayerCard::draw(M5GFX* gfx) {
 }
 
 bool PlayerCard::handleTouch(int16_t x, int16_t y, bool pressed, bool released) {
-    if (!_player || !contains(x, y)) return false;
-    if (!released) return pressed;
+    if (!_player || !contains(x, y))
+        return false;
+    if (!released)
+        return pressed;
 
     // Debounce
     uint32_t now = millis();
-    if (now - _lastTouchTime < DEBOUNCE_MS) return true;
+    if (now - _lastTouchTime < DEBOUNCE_MS)
+        return true;
     _lastTouchTime = now;
 
     // Check name tap

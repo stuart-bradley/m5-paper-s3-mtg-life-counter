@@ -1,15 +1,15 @@
 #pragma once
 
+#include <Preferences.h>
+#include "../../models/GameState.hpp"
+#include "../Button.hpp"
 #include "../Screen.hpp"
 #include "../Toolbar.hpp"
-#include "../Button.hpp"
-#include "../../models/GameState.hpp"
-#include <Preferences.h>
 
 class ScreenManager;
 
 class MTGSettingsScreen : public Screen {
-public:
+   public:
     MTGSettingsScreen(ScreenManager* manager);
     ~MTGSettingsScreen();
 
@@ -19,7 +19,7 @@ public:
     void draw(M5GFX* gfx) override;
     bool handleTouch(int16_t x, int16_t y, bool pressed, bool released) override;
 
-private:
+   private:
     ScreenManager* _manager;
     Toolbar _toolbar;
     GameState _gameState;

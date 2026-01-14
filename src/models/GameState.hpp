@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <Preferences.h>
+#include <cstdint>
 #include "Player.hpp"
 
 struct GameState {

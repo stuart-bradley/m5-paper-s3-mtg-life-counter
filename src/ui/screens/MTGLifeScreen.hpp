@@ -1,16 +1,16 @@
 #pragma once
 
+#include <Preferences.h>
+#include "../../models/GameState.hpp"
+#include "../Keyboard.hpp"
+#include "../PlayerCard.hpp"
 #include "../Screen.hpp"
 #include "../Toolbar.hpp"
-#include "../PlayerCard.hpp"
-#include "../Keyboard.hpp"
-#include "../../models/GameState.hpp"
-#include <Preferences.h>
 
 class ScreenManager;
 
 class MTGLifeScreen : public Screen {
-public:
+   public:
     static constexpr int16_t HEADER_HEIGHT = 44;
 
     MTGLifeScreen(ScreenManager* manager);
@@ -23,7 +23,7 @@ public:
 
     void setSettingsScreen(Screen* screen) { _settingsScreen = screen; }
 
-private:
+   private:
     ScreenManager* _manager;
     Screen* _settingsScreen = nullptr;
     Toolbar _toolbar;

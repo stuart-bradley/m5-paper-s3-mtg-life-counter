@@ -1,7 +1,7 @@
 #include "MTGSettingsScreen.hpp"
+#include <Arduino.h>
 #include "../../app/ScreenManager.hpp"
 #include "../../utils/Sound.hpp"
-#include <Arduino.h>
 
 // Layout constants
 static constexpr int16_t SCREEN_W = 960;
@@ -23,9 +23,7 @@ static constexpr int16_t SELECT_BTN_W = 64;
 static constexpr int16_t SELECT_BTN_H = 50;
 static constexpr int16_t RESET_BTN_H = 70;
 
-MTGSettingsScreen::MTGSettingsScreen(ScreenManager* manager)
-    : _manager(manager) {
-}
+MTGSettingsScreen::MTGSettingsScreen(ScreenManager* manager) : _manager(manager) {}
 
 MTGSettingsScreen::~MTGSettingsScreen() {
     destroyButtons();
@@ -56,14 +54,10 @@ void MTGSettingsScreen::createButtons() {
     destroyButtons();
 
     // Back button in header
-    _backButton = new Button(
-        Rect(16, HEADER_Y + 6, 80, 32),
-        "< BACK",
-        [this]() {
-            Sound::click();
-            _manager->goBack();
-        }
-    );
+    _backButton = new Button(Rect(16, HEADER_Y + 6, 80, 32), "< BACK", [this]() {
+        Sound::click();
+        _manager->goBack();
+    });
 
     // Left column, Section 1: Player count buttons (2-6)
     const int16_t playerSectionY = CONTENT_Y;
@@ -76,14 +70,12 @@ void MTGSettingsScreen::createButtons() {
         char label[4];
         snprintf(label, sizeof(label), "%d", playerCounts[i]);
         uint8_t count = playerCounts[i];
-        _playerButtons[i] = new Button(
-            Rect(playerStartX + i * (SELECT_BTN_W + playerBtnGap), playerBtnY, SELECT_BTN_W, SELECT_BTN_H),
-            label,
-            [this, count]() {
-                Sound::click();
-                onPlayerCountSelect(count);
-            }
-        );
+        _playerButtons[i] = new Button(Rect(playerStartX + i * (SELECT_BTN_W + playerBtnGap),
+                                            playerBtnY, SELECT_BTN_W, SELECT_BTN_H),
+                                       label, [this, count]() {
+                                           Sound::click();
+                                           onPlayerCountSelect(count);
+                                       });
     }
 
     // Left column, Section 2: Starting life buttons (20, 25, 30, 40)
@@ -99,13 +91,11 @@ void MTGSettingsScreen::createButtons() {
         snprintf(label, sizeof(label), "%d", lifeTotals[i]);
         int16_t life = lifeTotals[i];
         _lifeButtons[i] = new Button(
-            Rect(lifeStartX + i * (lifeBtnW + lifeBtnGap), lifeBtnY, lifeBtnW, SELECT_BTN_H),
-            label,
+            Rect(lifeStartX + i * (lifeBtnW + lifeBtnGap), lifeBtnY, lifeBtnW, SELECT_BTN_H), label,
             [this, life]() {
                 Sound::click();
                 onStartingLifeSelect(life);
-            }
-        );
+            });
     }
 
     // Right column: Reset buttons stacked
@@ -114,49 +104,37 @@ void MTGSettingsScreen::createButtons() {
     const int16_t resetBtnW = RIGHT_COL_W - 24;  // Padding inside section
     const int16_t resetBtnX = RIGHT_COL_X + 12;
 
-    _resetLifeButton = new Button(
-        Rect(resetBtnX, resetBtnY, resetBtnW, RESET_BTN_H),
-        "Reset Life",
-        [this]() {
+    _resetLifeButton =
+        new Button(Rect(resetBtnX, resetBtnY, resetBtnW, RESET_BTN_H), "Reset Life", [this]() {
             Sound::click();
             onResetLifeTapped();
-        }
-    );
+        });
 
-    _newGameButton = new Button(
-        Rect(resetBtnX, resetBtnY + RESET_BTN_H + 12, resetBtnW, RESET_BTN_H),
-        "New Game",
-        [this]() {
-            Sound::click();
-            onNewGameTapped();
-        }
-    );
+    _newGameButton =
+        new Button(Rect(resetBtnX, resetBtnY + RESET_BTN_H + 12, resetBtnW, RESET_BTN_H),
+                   "New Game", [this]() {
+                       Sound::click();
+                       onNewGameTapped();
+                   });
 
     // Confirm dialog buttons (initially hidden, created when needed)
-    _confirmCancelButton = new Button(
-        Rect(280, 300, 160, 50),
-        "Cancel",
-        [this]() {
-            Sound::click();
-            hideConfirmDialog();
-        }
-    );
+    _confirmCancelButton = new Button(Rect(280, 300, 160, 50), "Cancel", [this]() {
+        Sound::click();
+        hideConfirmDialog();
+    });
 
-    _confirmOkButton = new Button(
-        Rect(520, 300, 160, 50),
-        "Confirm",
-        [this]() {
-            Sound::click();
-            onConfirmAction();
-        }
-    );
+    _confirmOkButton = new Button(Rect(520, 300, 160, 50), "Confirm", [this]() {
+        Sound::click();
+        onConfirmAction();
+    });
 
     updatePlayerButtonStates();
     updateLifeButtonStates();
 }
 
 void MTGSettingsScreen::destroyButtons() {
-    delete _backButton; _backButton = nullptr;
+    delete _backButton;
+    _backButton = nullptr;
     for (int i = 0; i < 5; i++) {
         delete _playerButtons[i];
         _playerButtons[i] = nullptr;
@@ -165,10 +143,14 @@ void MTGSettingsScreen::destroyButtons() {
         delete _lifeButtons[i];
         _lifeButtons[i] = nullptr;
     }
-    delete _resetLifeButton; _resetLifeButton = nullptr;
-    delete _newGameButton; _newGameButton = nullptr;
-    delete _confirmCancelButton; _confirmCancelButton = nullptr;
-    delete _confirmOkButton; _confirmOkButton = nullptr;
+    delete _resetLifeButton;
+    _resetLifeButton = nullptr;
+    delete _newGameButton;
+    _newGameButton = nullptr;
+    delete _confirmCancelButton;
+    _confirmCancelButton = nullptr;
+    delete _confirmOkButton;
+    _confirmOkButton = nullptr;
 }
 
 void MTGSettingsScreen::updatePlayerButtonStates() {
@@ -294,7 +276,8 @@ void MTGSettingsScreen::draw(M5GFX* gfx) {
         }
 
         // Left column - Section 2: Starting Life
-        drawSection(gfx, LEFT_COL_X, CONTENT_Y + SECTION_H + SECTION_GAP, LEFT_COL_W, SECTION_H, "STARTING LIFE");
+        drawSection(gfx, LEFT_COL_X, CONTENT_Y + SECTION_H + SECTION_GAP, LEFT_COL_W, SECTION_H,
+                    "STARTING LIFE");
 
         // Draw starting life buttons
         const int16_t lifeTotals[] = {20, 25, 30, 40};
@@ -361,7 +344,8 @@ void MTGSettingsScreen::draw(M5GFX* gfx) {
     _dirty = false;
 }
 
-void MTGSettingsScreen::drawSection(M5GFX* gfx, int16_t x, int16_t y, int16_t w, int16_t h, const char* title) {
+void MTGSettingsScreen::drawSection(M5GFX* gfx, int16_t x, int16_t y, int16_t w, int16_t h,
+                                    const char* title) {
     // Section border
     gfx->drawRect(x, y, w, h, TFT_BLACK);
 
@@ -396,9 +380,8 @@ void MTGSettingsScreen::drawConfirmDialog(M5GFX* gfx) {
     // Dialog message
     gfx->setTextSize(2);
     gfx->setTextDatum(MC_DATUM);
-    const char* msg = _confirmIsNewGame
-        ? "Reset names and life totals."
-        : "Reset all players to starting life.";
+    const char* msg =
+        _confirmIsNewGame ? "Reset names and life totals." : "Reset all players to starting life.";
     gfx->drawString(msg, dialogX + dialogW / 2, dialogY + 90);
 
     // Update button positions for dialog

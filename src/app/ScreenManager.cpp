@@ -1,7 +1,8 @@
 #include "ScreenManager.hpp"
 
 void ScreenManager::setScreen(Screen* newScreen) {
-    if (_current == newScreen) return;
+    if (_current == newScreen)
+        return;
 
     if (_current) {
         _current->onExit();
@@ -17,7 +18,8 @@ void ScreenManager::setScreen(Screen* newScreen) {
 }
 
 void ScreenManager::goBack() {
-    if (!_previous) return;
+    if (!_previous)
+        return;
 
     if (_current) {
         _current->onExit();

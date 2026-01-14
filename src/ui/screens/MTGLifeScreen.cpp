@@ -1,11 +1,10 @@
 #include "MTGLifeScreen.hpp"
+#include <Arduino.h>
 #include "../../app/ScreenManager.hpp"
 #include "../../utils/Sound.hpp"
-#include <Arduino.h>
 
 MTGLifeScreen::MTGLifeScreen(ScreenManager* manager)
-    : _manager(manager), _settingsButtonRect(860, Toolbar::HEIGHT + 6, 90, 32) {
-}
+    : _manager(manager), _settingsButtonRect(860, Toolbar::HEIGHT + 6, 90, 32) {}
 
 void MTGLifeScreen::onEnter() {
     loadState();
@@ -37,10 +36,8 @@ void MTGLifeScreen::createPlayerCards() {
 
     for (int i = 0; i < _gameState.playerCount; i++) {
         int idx = i;  // Capture for lambda
-        _playerCards[i] = new PlayerCard(
-            &_gameState.players[i],
-            [this, idx]() { showKeyboard(idx); }
-        );
+        _playerCards[i] =
+            new PlayerCard(&_gameState.players[i], [this, idx]() { showKeyboard(idx); });
     }
     layoutPlayerCards();
 }
@@ -211,22 +208,20 @@ void MTGLifeScreen::showKeyboard(int playerIndex) {
         delete _keyboard;
     }
     _editingPlayerIndex = playerIndex;
-    _keyboard = new Keyboard(
-        _gameState.players[playerIndex].name,
-        [this](const char* result, bool confirmed) {
-            // Save index before hideKeyboard clears it
-            int idx = _editingPlayerIndex;
-            hideKeyboard(confirmed);
-            if (confirmed && idx >= 0) {
-                _gameState.players[idx].setName(result);
-                // Mark player card dirty to show updated name
-                if (_playerCards[idx]) {
-                    _playerCards[idx]->setDirty(true);
-                }
-                saveState();
-            }
-        }
-    );
+    _keyboard = new Keyboard(_gameState.players[playerIndex].name,
+                             [this](const char* result, bool confirmed) {
+                                 // Save index before hideKeyboard clears it
+                                 int idx = _editingPlayerIndex;
+                                 hideKeyboard(confirmed);
+                                 if (confirmed && idx >= 0) {
+                                     _gameState.players[idx].setName(result);
+                                     // Mark player card dirty to show updated name
+                                     if (_playerCards[idx]) {
+                                         _playerCards[idx]->setDirty(true);
+                                     }
+                                     saveState();
+                                 }
+                             });
     setNeedsFullRedraw(true);
 }
 

@@ -4,7 +4,7 @@
 #include "Component.hpp"
 
 class Button : public Component {
-public:
+   public:
     using Callback = std::function<void()>;
 
     Button(Rect bounds, const char* label, Callback onClick);
@@ -15,7 +15,7 @@ public:
     void setLabel(const char* label);
     const char* getLabel() const { return _label; }
 
-private:
+   private:
     static constexpr uint32_t DEBOUNCE_MS = 150;
 
     char _label[16] = "";

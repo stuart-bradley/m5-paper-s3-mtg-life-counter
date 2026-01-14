@@ -1,8 +1,7 @@
 #include "Toolbar.hpp"
 #include <M5Unified.h>
 
-Toolbar::Toolbar() : Component(Rect(0, 0, 960, HEIGHT)) {
-}
+Toolbar::Toolbar() : Component(Rect(0, 0, 960, HEIGHT)) {}
 
 void Toolbar::update() {
     int8_t newBattery = M5.Power.getBatteryLevel();
@@ -20,7 +19,8 @@ void Toolbar::update() {
 }
 
 void Toolbar::draw(M5GFX* gfx) {
-    if (!isDirty()) return;
+    if (!isDirty())
+        return;
 
     int16_t x = _bounds.x;
     int16_t y = _bounds.y;

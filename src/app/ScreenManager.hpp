@@ -4,7 +4,7 @@
 #include "../ui/Screen.hpp"
 
 class ScreenManager {
-public:
+   public:
     void setScreen(Screen* newScreen);
     void goBack();
 
@@ -15,7 +15,7 @@ public:
     void draw(M5GFX* gfx);
     bool handleTouch(int16_t x, int16_t y, bool pressed, bool released);
 
-private:
+   private:
     Screen* _current = nullptr;
     Screen* _previous = nullptr;
 };

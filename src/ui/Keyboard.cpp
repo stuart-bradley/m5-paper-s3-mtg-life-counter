@@ -1,16 +1,15 @@
 #include "Keyboard.hpp"
-#include "../utils/Sound.hpp"
 #include <Arduino.h>
 #include <cstring>
+#include "../utils/Sound.hpp"
 
 // Keyboard layout
-static const char* ROW0 = "QWERTYUIOP";   // 10 keys + backspace
-static const char* ROW1 = "ASDFGHJKL'";   // 10 keys
-static const char* ROW2 = "^ZXCVBNM.^";   // shift + 8 keys + shift (^ = shift indicator)
+static const char* ROW0 = "QWERTYUIOP";  // 10 keys + backspace
+static const char* ROW1 = "ASDFGHJKL'";  // 10 keys
+static const char* ROW2 = "^ZXCVBNM.^";  // shift + 8 keys + shift (^ = shift indicator)
 // Row 3: SPACE, DONE, CANCEL (special handling)
 
-Keyboard::Keyboard(const char* initialText, Callback onComplete)
-    : _onComplete(onComplete) {
+Keyboard::Keyboard(const char* initialText, Callback onComplete) : _onComplete(onComplete) {
     strncpy(_buffer, initialText, MAX_TEXT_LEN);
     _buffer[MAX_TEXT_LEN] = '\0';
     strncpy(_originalText, initialText, MAX_TEXT_LEN);
@@ -23,7 +22,8 @@ Keyboard::Keyboard(const char* initialText, Callback onComplete)
 }
 
 void Keyboard::appendChar(char c) {
-    if (_cursorPos >= MAX_TEXT_LEN) return;
+    if (_cursorPos >= MAX_TEXT_LEN)
+        return;
     _buffer[_cursorPos++] = c;
     _buffer[_cursorPos] = '\0';
     _shifted = false;  // Auto-unshift after typing
@@ -73,10 +73,12 @@ Rect Keyboard::getKeyRect(int row, int col) const {
 char Keyboard::getKeyChar(int row, int col) const {
     const char* rowStr = (row == 0) ? ROW0 : (row == 1) ? ROW1 : ROW2;
     int len = strlen(rowStr);
-    if (col >= len) return '\0';
+    if (col >= len)
+        return '\0';
 
     char c = rowStr[col];
-    if (c == '^') return '\0';  // Shift key, not a char
+    if (c == '^')
+        return '\0';  // Shift key, not a char
 
     if (!_shifted && c >= 'A' && c <= 'Z') {
         return c + 32;  // lowercase
@@ -87,24 +89,30 @@ char Keyboard::getKeyChar(int row, int col) const {
 const char* Keyboard::getKeyLabel(int row, int col) const {
     static char label[2] = {0, 0};
 
-    if (row == 0 && col == 10) return "<-";  // Backspace
+    if (row == 0 && col == 10)
+        return "<-";  // Backspace
     if (row == 3) {
-        if (col == 0) return "SPACE";
-        if (col == 1) return "DONE";
-        if (col == 2) return "CANCEL";
+        if (col == 0)
+            return "SPACE";
+        if (col == 1)
+            return "DONE";
+        if (col == 2)
+            return "CANCEL";
     }
     if (row == 2 && (col == 0 || col == 9)) {
         return _shifted ? "^" : "v";  // Shift indicator
     }
 
     char c = getKeyChar(row, col);
-    if (c == '\0') return "";
+    if (c == '\0')
+        return "";
     label[0] = c;
     return label;
 }
 
 void Keyboard::draw(M5GFX* gfx) {
-    if (!isDirty()) return;
+    if (!isDirty())
+        return;
 
     // Background - solid white to cover any ghosting
     gfx->fillRect(_bounds.x, _bounds.y, _bounds.w, _bounds.h, TFT_WHITE);
@@ -117,8 +125,8 @@ void Keyboard::draw(M5GFX* gfx) {
     gfx->setTextDatum(MC_DATUM);
     gfx->setTextSize(3);
     gfx->drawString(_buffer, _bounds.x + _bounds.w / 2, _bounds.y + PREVIEW_HEIGHT / 2);
-    gfx->drawLine(_bounds.x, _bounds.y + PREVIEW_HEIGHT,
-                  _bounds.x + _bounds.w, _bounds.y + PREVIEW_HEIGHT, TFT_BLACK);
+    gfx->drawLine(_bounds.x, _bounds.y + PREVIEW_HEIGHT, _bounds.x + _bounds.w,
+                  _bounds.y + PREVIEW_HEIGHT, TFT_BLACK);
 
     // Draw rows 0-2 (letter keys)
     gfx->setTextSize(2);  // Larger text for keys
@@ -147,8 +155,10 @@ void Keyboard::draw(M5GFX* gfx) {
 }
 
 bool Keyboard::handleTouch(int16_t x, int16_t y, bool pressed, bool released) {
-    if (!contains(x, y)) return false;
-    if (!released) return pressed;
+    if (!contains(x, y))
+        return false;
+    if (!released)
+        return pressed;
 
     Sound::click();
 

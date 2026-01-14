@@ -18,12 +18,14 @@ bool isEnabled() {
 }
 
 void click() {
-    if (!s_enabled) return;
+    if (!s_enabled)
+        return;
     M5.Speaker.tone(1000, 20);
 }
 
 void lifeUp() {
-    if (!s_enabled) return;
+    if (!s_enabled)
+        return;
     // Ascending tone: two quick notes
     M5.Speaker.tone(800, 25);
     delay(30);
@@ -31,7 +33,8 @@ void lifeUp() {
 }
 
 void lifeDown() {
-    if (!s_enabled) return;
+    if (!s_enabled)
+        return;
     // Descending tone: two quick notes
     M5.Speaker.tone(1200, 25);
     delay(30);
@@ -39,7 +42,8 @@ void lifeDown() {
 }
 
 void alert() {
-    if (!s_enabled) return;
+    if (!s_enabled)
+        return;
     M5.Speaker.tone(500, 200);
 }
 

@@ -4,7 +4,7 @@
 #include "Component.hpp"
 
 class Keyboard : public Component {
-public:
+   public:
     using Callback = std::function<void(const char* result, bool confirmed)>;
 
     Keyboard(const char* initialText, Callback onComplete);
@@ -12,7 +12,7 @@ public:
     void draw(M5GFX* gfx) override;
     bool handleTouch(int16_t x, int16_t y, bool pressed, bool released) override;
 
-private:
+   private:
     static constexpr int16_t KEY_WIDTH = 75;
     static constexpr int16_t KEY_HEIGHT = 50;
     static constexpr int16_t KEY_SPACING = 6;

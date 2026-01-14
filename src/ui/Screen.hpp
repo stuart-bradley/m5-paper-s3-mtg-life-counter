@@ -3,7 +3,7 @@
 #include <M5GFX.h>
 
 class Screen {
-public:
+   public:
     virtual ~Screen() = default;
 
     // Lifecycle
@@ -18,13 +18,16 @@ public:
 
     // Touch handling - return true if touch was consumed
     virtual bool handleTouch(int16_t x, int16_t y, bool pressed, bool released) {
-        (void)x; (void)y; (void)pressed; (void)released;
+        (void)x;
+        (void)y;
+        (void)pressed;
+        (void)released;
         return false;
     }
 
     void setNeedsFullRedraw(bool needs = true) { _needsFullRedraw = needs; }
     bool needsFullRedraw() const { return _needsFullRedraw; }
 
-protected:
+   protected:
     bool _needsFullRedraw = true;
 };
