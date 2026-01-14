@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M5Paper S3 UI Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* E-ink grayscale palette - 16 levels */
+      --g0: #000000;   /* Pure black */
+      --g1: #111111;
+      --g2: #222222;
+      --g3: #333333;
+      --g4: #444444;
+      --g5: #555555;
+      --g6: #666666;
+      --g7: #777777;
+      --g8: #888888;
+      --g9: #999999;
+      --g10: #aaaaaa;
+      --g11: #bbbbbb;
+      --g12: #cccccc;
+      --g13: #dddddd;
+      --g14: #eeeeee;
+      --g15: #ffffff;  /* Pure white */
+
+      /* Semantic colors */
+      --bg: var(--g14);
+      --fg: var(--g1);
+      --border: var(--g3);
+      --accent: var(--g0);
+      --muted: var(--g8);
+      --highlight: var(--g12);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--g6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .device-frame {
+      background: var(--g2);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .screen {
+      width: 960px;
+      height: 540px;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+      image-rendering: pixelated;
+    }
+
+    /* Subtle scanline effect for CRT vibes */
+    .screen::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+    }
+
+    .view {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+    }
+
+    .view.active {
+      display: flex;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       TOOLBAR - Top system bar
+    ═══════════════════════════════════════════════════════════ */
+    .toolbar {
+      height: 32px;
+      background: var(--g1);
+      color: var(--g13);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      font-size: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      border-bottom: 2px solid var(--g0);
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .toolbar-icon {
+      font-family: 'IBM Plex Mono', monospace;
+      letter-spacing: -1px;
+    }
+
+    .blink {
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       HOME SCREEN - App launcher grid
+    ═══════════════════════════════════════════════════════════ */
+    .home-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 40px;
+    }
+
+    .home-header {
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    .app-grid {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex: 1;
+      align-items: center;
+    }
+
+    .app-icon {
+      width: 180px;
+      height: 180px;
+      background: var(--bg);
+      border: 3px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.1s;
+      position: relative;
+    }
+
+    .app-icon:hover {
+      background: var(--g12);
+      border-color: var(--g0);
+    }
+
+    .app-icon:active {
+      background: var(--g1);
+      color: var(--g14);
+    }
+
+    .app-icon:active .app-ascii {
+      color: var(--g14);
+    }
+
+    .app-ascii {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      line-height: 1.1;
+      white-space: pre;
+      color: var(--fg);
+      margin-bottom: 12px;
+    }
+
+    .app-ascii.pixel-art {
+      font-size: 14px;
+      line-height: 1.15;
+      letter-spacing: 1px;
+      font-weight: 400;
+      color: var(--g0);
+      margin-bottom: 24px;
+    }
+
+    .app-icon:active .app-ascii.pixel-art {
+      color: var(--g14);
+    }
+
+    .app-label {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      position: absolute;
+      bottom: 14px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SETTINGS APP
+    ═══════════════════════════════════════════════════════════ */
+    .settings-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      background: var(--g2);
+      color: var(--g13);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 2px solid var(--g0);
+    }
+
+    .back-btn {
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 12px;
+      border: 2px solid var(--g10);
+      background: transparent;
+      color: var(--g13);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .back-btn:hover {
+      background: var(--g10);
+      color: var(--g0);
+    }
+
+    .app-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .settings-body {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .settings-section {
+      border: 2px solid var(--border);
+      background: var(--g15);
+    }
+
+    .section-header {
+      background: var(--g3);
+      color: var(--g13);
+      padding: 8px 16px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--g0);
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--g11);
+      cursor: pointer;
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-row:hover {
+      background: var(--g12);
+    }
+
+    .setting-label {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .setting-icon {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 16px;
+      width: 40px;
+      text-align: center;
+    }
+
+    .setting-text {
+      font-size: 16px;
+    }
+
+    .setting-value {
+      font-size: 14px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toggle {
+      width: 60px;
+      height: 28px;
+      border: 2px solid var(--border);
+      background: var(--g12);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .toggle.on {
+      background: var(--g3);
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: var(--g15);
+      border: 2px solid var(--g0);
+      top: 2px;
+      left: 2px;
+      transition: left 0.15s;
+    }
+
+    .toggle.on::after {
+      left: 34px;
+    }
+
+    .toggle-label {
+      position: absolute;
+      font-size: 10px;
+      top: 6px;
+      font-weight: 600;
+    }
+
+    .toggle .toggle-label.off {
+      right: 6px;
+      color: var(--g5);
+    }
+
+    .toggle .toggle-label.on {
+      left: 6px;
+      color: var(--g13);
+      display: none;
+    }
+
+    .toggle.on .toggle-label.off {
+      display: none;
+    }
+
+    .toggle.on .toggle-label.on {
+      display: block;
+    }
+
+    /* WiFi Selection Modal */
+    .wifi-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .wifi-network {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--g11);
+      cursor: pointer;
+    }
+
+    .wifi-network:hover {
+      background: var(--g12);
+    }
+
+    .wifi-network.connected {
+      background: var(--g11);
+    }
+
+    .wifi-signal {
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .wifi-name {
+      flex: 1;
+      margin-left: 12px;
+    }
+
+    .wifi-status {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       MTG LIFE COUNTER - Main View
+    ═══════════════════════════════════════════════════════════ */
+    .mtg-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mtg-header {
+      background: var(--g1);
+      color: var(--g13);
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid var(--g0);
+    }
+
+    .mtg-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .mtg-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 3px;
+    }
+
+    .mtg-title-ascii {
+      font-size: 11px;
+      color: var(--g8);
+    }
+
+    .settings-btn {
+      padding: 6px 16px;
+      border: 2px solid var(--g10);
+      background: transparent;
+      color: var(--g13);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+
+    .settings-btn:hover {
+      background: var(--g10);
+      color: var(--g0);
+    }
+
+    .players-grid {
+      flex: 1;
+      display: grid;
+      gap: 4px;
+      padding: 8px;
+      background: var(--g10);
+    }
+
+    .players-grid.players-2 {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .players-grid.players-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .players-grid.players-4 {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+
+    .players-grid.players-5 {
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+
+    .players-grid.players-5 .player-card:nth-child(4) {
+      grid-column: 1 / 2;
+    }
+
+    .players-grid.players-5 .player-card:nth-child(5) {
+      grid-column: 2 / 4;
+    }
+
+    .players-grid.players-6 {
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+
+    .player-card {
+      background: var(--g15);
+      border: 3px solid var(--g2);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .player-header {
+      background: var(--g3);
+      color: var(--g13);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--g0);
+    }
+
+    .player-name {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .player-number {
+      font-size: 11px;
+      color: var(--g9);
+    }
+
+    .player-life-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .life-total {
+      font-family: 'VT323', monospace;
+      font-size: 120px;
+      line-height: 1;
+      color: var(--g0);
+      text-shadow: 3px 3px 0 var(--g11);
+    }
+
+    .players-grid.players-3 .life-total,
+    .players-grid.players-5 .life-total,
+    .players-grid.players-6 .life-total {
+      font-size: 80px;
+    }
+
+    .life-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 8px;
+    }
+
+    .life-btn-group {
+      display: flex;
+      gap: 4px;
+    }
+
+    .life-btn {
+      width: 56px;
+      height: 44px;
+      border: 2px solid var(--g3);
+      background: var(--g13);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .life-btn:hover {
+      background: var(--g11);
+    }
+
+    .life-btn:active {
+      background: var(--g3);
+      color: var(--g15);
+    }
+
+    .life-btn.minus {
+      color: var(--g0);
+    }
+
+    .life-btn.plus {
+      color: var(--g0);
+    }
+
+    .players-grid.players-3 .life-btn,
+    .players-grid.players-5 .life-btn,
+    .players-grid.players-6 .life-btn {
+      width: 44px;
+      height: 36px;
+      font-size: 14px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       MTG SETTINGS VIEW
+    ═══════════════════════════════════════════════════════════ */
+    .mtg-settings-body {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      gap: 16px;
+    }
+
+    .mtg-settings-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .mtg-settings-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .mtg-section {
+      border: 2px solid var(--border);
+      background: var(--g15);
+    }
+
+    .mtg-section-header {
+      background: var(--g3);
+      color: var(--g13);
+      padding: 8px 12px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--g0);
+    }
+
+    .mtg-section-body {
+      padding: 12px;
+    }
+
+    .number-selector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .number-btn {
+      width: 50px;
+      height: 50px;
+      border: 2px solid var(--g3);
+      background: var(--g13);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .number-btn:hover {
+      background: var(--g11);
+    }
+
+    .number-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .number-value {
+      font-size: 36px;
+      font-weight: 700;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .life-presets {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .life-preset {
+      padding: 12px 24px;
+      border: 2px solid var(--g3);
+      background: var(--g13);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .life-preset:hover {
+      background: var(--g11);
+    }
+
+    .life-preset.active {
+      background: var(--g2);
+      color: var(--g15);
+      border-color: var(--g0);
+    }
+
+    .player-name-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .player-name-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .player-name-label {
+      font-size: 12px;
+      color: var(--muted);
+      width: 24px;
+    }
+
+    .player-name-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 2px solid var(--g5);
+      background: var(--g14);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+    }
+
+    .player-name-input:focus {
+      outline: none;
+      border-color: var(--g0);
+      background: var(--g15);
+    }
+
+    .reset-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .reset-btn {
+      padding: 14px 20px;
+      border: 2px solid var(--g3);
+      background: var(--g13);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .reset-btn:hover {
+      background: var(--g11);
+    }
+
+    .reset-btn.danger {
+      border-color: var(--g0);
+    }
+
+    .reset-btn.danger:hover {
+      background: var(--g3);
+      color: var(--g15);
+    }
+
+    .reset-icon {
+      font-size: 18px;
+    }
+
+    .reset-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .reset-title {
+      font-weight: 600;
+    }
+
+    .reset-desc {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .reset-btn.danger:hover .reset-desc {
+      color: var(--g10);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SCREEN NAVIGATION (for mockup only)
+    ═══════════════════════════════════════════════════════════ */
+    .nav-controls {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav-btn {
+      padding: 10px 20px;
+      background: var(--g3);
+      color: var(--g13);
+      border: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+
+    .nav-btn:hover {
+      background: var(--g1);
+    }
+
+    .nav-btn.active {
+      background: var(--g8);
+      color: var(--g0);
+    }
+
+    .mockup-info {
+      margin-top: 20px;
+      text-align: center;
+      color: var(--g10);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+    }
+
+    /* Footer info */
+    .screen-footer {
+      background: var(--g2);
+      color: var(--g10);
+      padding: 4px 12px;
+      font-size: 10px;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--g0);
+    }
+  </style>
+</head>
+<body>
+  <div class="device-frame">
+    <div class="screen">
+      <!-- ═══════════════════════════════════════════════════════════
+           HOME SCREEN
+      ═══════════════════════════════════════════════════════════ -->
+      <div id="view-home" class="view active">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-icon">[M5]</span>
+            <span>PAPER-S3</span>
+            <span class="blink">_</span>
+          </div>
+          <div class="toolbar-right">
+            <span class="toolbar-icon" title="WiFi Connected">((●))</span>
+            <span class="toolbar-icon" title="Sound On">♪</span>
+            <span class="toolbar-icon" title="Battery">[████░░] 67%</span>
+            <span>14:32</span>
+          </div>
+        </div>
+
+        <div class="home-content">
+          <div class="home-header">
+            ══════════════ SELECT APPLICATION ══════════════
+          </div>
+
+          <div class="app-grid">
+            <div class="app-icon" onclick="showView('view-settings')">
+              <pre class="app-ascii pixel-art">    ██ ██
+  ██████████
+ ███ ▄▄▄▄ ███
+████ █  █ ████
+ ███ █  █ ███
+████ █  █ ████
+ ███ ▀▀▀▀ ███
+  ██████████
+    ██ ██</pre>
+              <span class="app-label">Settings</span>
+            </div>
+
+            <div class="app-icon" onclick="showView('view-mtg')">
+              <pre class="app-ascii pixel-art">      ███
+     █████
+    ███████
+   ███ █ ███
+  ███ ███ ███
+ ███ █████ ███
+  ███████████
+   ███   ███
+    ███████</pre>
+              <span class="app-label">MTG Life</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-footer">
+          <span>M5Paper-S3 v1.0.0</span>
+          <span>960x540 @ 16 grayscale</span>
+          <span>mem: 8MB PSRAM</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           SETTINGS APP
+      ═══════════════════════════════════════════════════════════ -->
+      <div id="view-settings" class="view">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-icon">[M5]</span>
+            <span>SETTINGS</span>
+          </div>
+          <div class="toolbar-right">
+            <span class="toolbar-icon">((●))</span>
+            <span class="toolbar-icon">♪</span>
+            <span class="toolbar-icon">[████░░] 67%</span>
+            <span>14:32</span>
+          </div>
+        </div>
+
+        <div class="settings-content">
+          <div class="app-header">
+            <button class="back-btn" onclick="showView('view-home')">◄ ESC</button>
+            <span class="app-title">System Settings</span>
+          </div>
+
+          <div class="settings-body">
+            <div class="settings-section">
+              <div class="section-header">── Network ──</div>
+              <div class="setting-row" onclick="showView('view-wifi')">
+                <div class="setting-label">
+                  <span class="setting-icon">((●))</span>
+                  <span class="setting-text">WiFi Connection</span>
+                </div>
+                <div class="setting-value">
+                  <span>HomeNetwork_5G</span>
+                  <span>►</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="section-header">── Audio ──</div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span class="setting-icon">♪</span>
+                  <span class="setting-text">System Sounds</span>
+                </div>
+                <div class="setting-value">
+                  <div class="toggle on" onclick="this.classList.toggle('on')">
+                    <span class="toggle-label off">OFF</span>
+                    <span class="toggle-label on">ON</span>
+                  </div>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span class="setting-icon">◗</span>
+                  <span class="setting-text">Button Feedback</span>
+                </div>
+                <div class="setting-value">
+                  <div class="toggle on" onclick="this.classList.toggle('on')">
+                    <span class="toggle-label off">OFF</span>
+                    <span class="toggle-label on">ON</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="section-header">── Display ──</div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span class="setting-icon">☀</span>
+                  <span class="setting-text">Auto Refresh</span>
+                </div>
+                <div class="setting-value">
+                  <div class="toggle" onclick="this.classList.toggle('on')">
+                    <span class="toggle-label off">OFF</span>
+                    <span class="toggle-label on">ON</span>
+                  </div>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span class="setting-icon">◐</span>
+                  <span class="setting-text">Refresh Rate</span>
+                </div>
+                <div class="setting-value">
+                  <span>Partial (Fast)</span>
+                  <span>►</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="section-header">── System ──</div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span class="setting-icon">ⓘ</span>
+                  <span class="setting-text">About Device</span>
+                </div>
+                <div class="setting-value">
+                  <span>►</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           WIFI SELECTION
+      ═══════════════════════════════════════════════════════════ -->
+      <div id="view-wifi" class="view">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-icon">[M5]</span>
+            <span>WIFI</span>
+          </div>
+          <div class="toolbar-right">
+            <span class="toolbar-icon">((●))</span>
+            <span class="toolbar-icon">♪</span>
+            <span class="toolbar-icon">[████░░] 67%</span>
+            <span>14:32</span>
+          </div>
+        </div>
+
+        <div class="settings-content">
+          <div class="app-header">
+            <button class="back-btn" onclick="showView('view-settings')">◄ ESC</button>
+            <span class="app-title">Select WiFi Network</span>
+          </div>
+
+          <div class="settings-body">
+            <div class="settings-section">
+              <div class="section-header">── Available Networks ──</div>
+              <div class="wifi-list">
+                <div class="wifi-network connected">
+                  <span class="wifi-signal">▂▄▆█</span>
+                  <span class="wifi-name">HomeNetwork_5G</span>
+                  <span class="wifi-status">● CONNECTED</span>
+                </div>
+                <div class="wifi-network">
+                  <span class="wifi-signal">▂▄▆░</span>
+                  <span class="wifi-name">HomeNetwork_2.4G</span>
+                  <span class="wifi-status">🔒</span>
+                </div>
+                <div class="wifi-network">
+                  <span class="wifi-signal">▂▄░░</span>
+                  <span class="wifi-name">Neighbor_WiFi</span>
+                  <span class="wifi-status">🔒</span>
+                </div>
+                <div class="wifi-network">
+                  <span class="wifi-signal">▂▄░░</span>
+                  <span class="wifi-name">NETGEAR-Guest</span>
+                  <span class="wifi-status">🔒</span>
+                </div>
+                <div class="wifi-network">
+                  <span class="wifi-signal">▂░░░</span>
+                  <span class="wifi-name">xfinitywifi</span>
+                  <span class="wifi-status"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           MTG LIFE COUNTER - MAIN
+      ═══════════════════════════════════════════════════════════ -->
+      <div id="view-mtg" class="view">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-icon">[M5]</span>
+            <span>MTG LIFE</span>
+          </div>
+          <div class="toolbar-right">
+            <span class="toolbar-icon">((●))</span>
+            <span class="toolbar-icon">[████░░] 67%</span>
+            <span>14:32</span>
+          </div>
+        </div>
+
+        <div class="mtg-content">
+          <div class="mtg-header">
+            <div class="mtg-header-left">
+              <button class="back-btn" onclick="showView('view-home')">◄ ESC</button>
+              <span class="mtg-title">LIFE COUNTER</span>
+              <span class="mtg-title-ascii">═══════════════</span>
+            </div>
+            <button class="settings-btn" onclick="showView('view-mtg-settings')">[⚙] SETTINGS</button>
+          </div>
+
+          <div class="players-grid players-4" id="players-grid">
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">PLAYER_1</span>
+                <span class="player-number">P1</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">40</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">PLAYER_2</span>
+                <span class="player-number">P2</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">37</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">PLAYER_3</span>
+                <span class="player-number">P3</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">29</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">PLAYER_4</span>
+                <span class="player-number">P4</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">15</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           MTG LIFE COUNTER - SETTINGS
+      ═══════════════════════════════════════════════════════════ -->
+      <div id="view-mtg-settings" class="view">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-icon">[M5]</span>
+            <span>MTG CONFIG</span>
+          </div>
+          <div class="toolbar-right">
+            <span class="toolbar-icon">((●))</span>
+            <span class="toolbar-icon">[████░░] 67%</span>
+            <span>14:32</span>
+          </div>
+        </div>
+
+        <div class="mtg-content">
+          <div class="mtg-header">
+            <div class="mtg-header-left">
+              <button class="back-btn" onclick="showView('view-mtg')">◄ BACK</button>
+              <span class="mtg-title">GAME SETTINGS</span>
+            </div>
+          </div>
+
+          <div class="mtg-settings-body">
+            <div class="mtg-settings-left">
+              <div class="mtg-section">
+                <div class="mtg-section-header">── Number of Players ──</div>
+                <div class="mtg-section-body">
+                  <div class="number-selector">
+                    <button class="number-btn" id="players-minus">−</button>
+                    <span class="number-value" id="player-count">4</span>
+                    <button class="number-btn" id="players-plus">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mtg-section">
+                <div class="mtg-section-header">── Starting Life Total ──</div>
+                <div class="mtg-section-body">
+                  <div class="life-presets">
+                    <button class="life-preset">20</button>
+                    <button class="life-preset active">40</button>
+                    <button class="life-preset">30</button>
+                    <button class="life-preset">25</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mtg-section">
+                <div class="mtg-section-header">── Reset Options ──</div>
+                <div class="mtg-section-body">
+                  <div class="reset-buttons">
+                    <button class="reset-btn">
+                      <span class="reset-icon">↺</span>
+                      <span class="reset-text">
+                        <span class="reset-title">Reset Life Totals</span>
+                        <span class="reset-desc">Keep players, reset to starting life</span>
+                      </span>
+                    </button>
+                    <button class="reset-btn danger">
+                      <span class="reset-icon">⚠</span>
+                      <span class="reset-text">
+                        <span class="reset-title">New Game</span>
+                        <span class="reset-desc">Reset everything to defaults</span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mtg-settings-right">
+              <div class="mtg-section" style="flex: 1;">
+                <div class="mtg-section-header">── Player Names ──</div>
+                <div class="mtg-section-body">
+                  <div class="player-name-list">
+                    <div class="player-name-row">
+                      <span class="player-name-label">P1</span>
+                      <input type="text" class="player-name-input" value="PLAYER_1">
+                    </div>
+                    <div class="player-name-row">
+                      <span class="player-name-label">P2</span>
+                      <input type="text" class="player-name-input" value="PLAYER_2">
+                    </div>
+                    <div class="player-name-row">
+                      <span class="player-name-label">P3</span>
+                      <input type="text" class="player-name-input" value="PLAYER_3">
+                    </div>
+                    <div class="player-name-row">
+                      <span class="player-name-label">P4</span>
+                      <input type="text" class="player-name-input" value="PLAYER_4">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           MTG 2 PLAYERS VIEW
+      ═══════════════════════════════════════════════════════════ -->
+      <div id="view-mtg-2p" class="view">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-icon">[M5]</span>
+            <span>MTG LIFE</span>
+          </div>
+          <div class="toolbar-right">
+            <span class="toolbar-icon">((●))</span>
+            <span class="toolbar-icon">[████░░] 67%</span>
+            <span>14:32</span>
+          </div>
+        </div>
+
+        <div class="mtg-content">
+          <div class="mtg-header">
+            <div class="mtg-header-left">
+              <button class="back-btn" onclick="showView('view-home')">◄ ESC</button>
+              <span class="mtg-title">LIFE COUNTER</span>
+              <span class="mtg-title-ascii">═══════════════</span>
+            </div>
+            <button class="settings-btn" onclick="showView('view-mtg-settings')">[⚙] SETTINGS</button>
+          </div>
+
+          <div class="players-grid players-2">
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">PLAYER_1</span>
+                <span class="player-number">P1</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">20</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">PLAYER_2</span>
+                <span class="player-number">P2</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">20</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           MTG 6 PLAYERS VIEW
+      ═══════════════════════════════════════════════════════════ -->
+      <div id="view-mtg-6p" class="view">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-icon">[M5]</span>
+            <span>MTG LIFE</span>
+          </div>
+          <div class="toolbar-right">
+            <span class="toolbar-icon">((●))</span>
+            <span class="toolbar-icon">[████░░] 67%</span>
+            <span>14:32</span>
+          </div>
+        </div>
+
+        <div class="mtg-content">
+          <div class="mtg-header">
+            <div class="mtg-header-left">
+              <button class="back-btn" onclick="showView('view-home')">◄ ESC</button>
+              <span class="mtg-title">LIFE COUNTER</span>
+              <span class="mtg-title-ascii">═══════════════</span>
+            </div>
+            <button class="settings-btn" onclick="showView('view-mtg-settings')">[⚙] SETTINGS</button>
+          </div>
+
+          <div class="players-grid players-6">
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">ALICE</span>
+                <span class="player-number">P1</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">40</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">BOB</span>
+                <span class="player-number">P2</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">32</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">CHARLIE</span>
+                <span class="player-number">P3</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">28</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">DIANA</span>
+                <span class="player-number">P4</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">15</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">EDGAR</span>
+                <span class="player-number">P5</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">40</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-header">
+                <span class="player-name">FIONA</span>
+                <span class="player-number">P6</span>
+              </div>
+              <div class="player-life-area">
+                <span class="life-total">6</span>
+                <div class="life-controls">
+                  <div class="life-btn-group">
+                    <button class="life-btn minus">-5</button>
+                    <button class="life-btn minus">-1</button>
+                  </div>
+                  <div class="life-btn-group">
+                    <button class="life-btn plus">+1</button>
+                    <button class="life-btn plus">+5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-controls">
+    <button class="nav-btn active" onclick="showView('view-home')">HOME</button>
+    <button class="nav-btn" onclick="showView('view-settings')">SETTINGS</button>
+    <button class="nav-btn" onclick="showView('view-wifi')">WIFI</button>
+    <button class="nav-btn" onclick="showView('view-mtg')">MTG (4P)</button>
+    <button class="nav-btn" onclick="showView('view-mtg-2p')">MTG (2P)</button>
+    <button class="nav-btn" onclick="showView('view-mtg-6p')">MTG (6P)</button>
+    <button class="nav-btn" onclick="showView('view-mtg-settings')">MTG SETTINGS</button>
+  </div>
+
+  <div class="mockup-info">
+    M5Paper S3 UI Mockup ─ 960x540 pixels ─ 16 grayscale levels ─ Click nav buttons to switch views
+  </div>
+
+  <script>
+    function showView(viewId) {
+      // Hide all views
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      // Show target view
+      document.getElementById(viewId).classList.add('active');
+      // Update nav buttons
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.onclick.toString().includes(viewId)) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    // Life counter interactivity
+    document.querySelectorAll('.life-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const card = this.closest('.player-card');
+        const lifeTotal = card.querySelector('.life-total');
+        let life = parseInt(lifeTotal.textContent);
+        const change = parseInt(this.textContent);
+        life += change;
+        lifeTotal.textContent = life;
+      });
+    });
+
+    // Player count adjustment
+    let playerCount = 4;
+    document.getElementById('players-minus')?.addEventListener('click', () => {
+      if (playerCount > 2) {
+        playerCount--;
+        document.getElementById('player-count').textContent = playerCount;
+      }
+    });
+    document.getElementById('players-plus')?.addEventListener('click', () => {
+      if (playerCount < 6) {
+        playerCount++;
+        document.getElementById('player-count').textContent = playerCount;
+      }
+    });
+
+    // Life preset selection
+    document.querySelectorAll('.life-preset').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.life-preset').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

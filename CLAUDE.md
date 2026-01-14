@@ -1,7 +1,18 @@
-# MTG Life Counter for M5Paper S3
+# M5Paper S3 App Platform
 
 ## Project Overview
-A Magic: The Gathering life counter application for the M5Paper S3 e-ink device.
+An app platform for the M5Paper S3 e-ink device featuring a home screen launcher, system settings, and a Magic: The Gathering life counter application.
+
+## Issue Tracking
+Use **beads** (`bd` command) for issue tracking. Key commands:
+```bash
+bd ready              # Show issues ready to work on
+bd list --status=open # All open issues
+bd create --title="..." --type=task|bug|feature --priority=2
+bd update <id> --status=in_progress
+bd close <id>
+bd sync               # Sync with git remote
+```
 
 ## Hardware
 - **Device**: M5Paper S3
@@ -53,15 +64,73 @@ if (M5.Touch.getCount() > 0) {
 - `src/models/` - Data structures (Player, GameState)
 - `src/utils/` - Storage, helpers
 
-## Features to Implement
-1. **Player Management**: 2-6 players, configurable
-2. **Life Tracking**: Starting life (20/40), +/- buttons, tap to edit
-3. **Name Editing**: On-screen keyboard or character picker
-4. **Persistence**: Save game state to NVS (Preferences library)
-5. **Reset/New Game**: Confirm dialog, reset to starting life
+## UI Design
+
+**Design Reference**: `ui-mockup/index.html` - Interactive HTML prototype (pixel-accurate to device)
+
+### Visual Style: UNIX/ASCII Hacker Aesthetic
+- Monospace fonts throughout (IBM Plex Mono style)
+- Box-drawing characters for borders and frames
+- Pixel art icons on home screen
+- High contrast black on light gray
+- Terminal-inspired UI patterns
+- 16-level grayscale palette only
+
+### Screen Structure
+
+**System Toolbar** (32px height, top of every screen)
+- Left: Device identifier `[M5] PAPER-S3`
+- Right: WiFi indicator `((●))`, Sound `♪`, Battery `[████░░] 67%`, Time
+
+**Home Screen** (App Launcher)
+- Grid of 180×180px app icons with pixel art graphics black filled
+- Current apps: Settings (6 spoke gear icon), MTG Life (mtg logo)
+- Tap to launch, ESC/back to return
+
+### Apps
+
+**Settings App**
+- WiFi connection (network list with signal strength)
+- Sound toggle (system sounds, button feedback)
+- Display settings (auto refresh, refresh rate)
+- About device info
+
+**MTG Life Counter App**
+- **Main View**: Player cards in grid layout
+  - 2 players: 1×2 horizontal
+  - 3 players: 1×3 horizontal
+  - 4 players: 2×2 grid
+  - 5 players: 3+2 layout
+  - 6 players: 2×3 grid
+- **Player Card**: Name header, large life total (VT323 font), -5/-1/+1/+5 buttons
+- **Settings View**: Player count (2-6), starting life (20/25/30/40), player names, reset options
+- **Reset Options**:
+  - Reset Life Totals: Keep players, reset to starting life
+  - New Game: Reset everything to defaults (2 players, default names)
+
+### Layout Specifications
+- Screen: 960×540 pixels
+- Toolbar: 32px height
+- Touch targets: Minimum 44×36px (life buttons), 80×80px preferred (app icons)
+- Life totals: 120px font (2-4 players), 80px font (5-6 players)
+- Margins: 8-20px depending on context
+
+## Features
+
+### System Features
+1. **App Launcher**: Home screen with icon grid
+2. **System Toolbar**: WiFi, battery, sound status, clock
+3. **Settings App**: WiFi, sound, display configuration
+4. **Persistence**: Save state to NVS (Preferences library)
+
+### MTG Life Counter Features
+1. **Player Management**: 2-6 players, configurable names
+2. **Life Tracking**: Starting life (20/25/30/40), +/- 1 and +/- 5 buttons
+3. **Reset Options**: Life-only reset vs full game reset
+4. **Large Display**: Life totals readable from distance
 
 ## UI Guidelines
-- Large touch targets (min 80×80 pixels)
+- Large touch targets (min 44px, prefer 80px)
 - High contrast for e-ink readability
 - Life totals should be LARGE (primary info)
 - Player names smaller but readable
