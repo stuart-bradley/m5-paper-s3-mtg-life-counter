@@ -11,6 +11,8 @@ class ScreenManager;
 
 class MTGLifeScreen : public Screen {
 public:
+    static constexpr int16_t HEADER_HEIGHT = 44;
+
     MTGLifeScreen(ScreenManager* manager);
 
     void onEnter() override;
@@ -19,8 +21,11 @@ public:
     void draw(M5GFX* gfx) override;
     bool handleTouch(int16_t x, int16_t y, bool pressed, bool released) override;
 
+    void setSettingsScreen(Screen* screen) { _settingsScreen = screen; }
+
 private:
     ScreenManager* _manager;
+    Screen* _settingsScreen = nullptr;
     Toolbar _toolbar;
     GameState _gameState;
     PlayerCard* _playerCards[GameState::MAX_PLAYERS] = {nullptr};
@@ -31,6 +36,9 @@ private:
     uint32_t _lastSaveTime = 0;
     static constexpr uint32_t SAVE_INTERVAL_MS = 5000;
 
+    // Header button bounds
+    Rect _settingsButtonRect;
+
     void loadState();
     void saveState();
     void createPlayerCards();
@@ -40,4 +48,7 @@ private:
 
     void showKeyboard(int playerIndex);
     void hideKeyboard(bool confirmed);
+
+    void drawHeader(M5GFX* gfx);
+    bool handleHeaderTouch(int16_t x, int16_t y, bool released);
 };

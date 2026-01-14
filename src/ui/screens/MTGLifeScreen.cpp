@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 MTGLifeScreen::MTGLifeScreen(ScreenManager* manager)
-    : _manager(manager) {
+    : _manager(manager), _settingsButtonRect(860, Toolbar::HEIGHT + 6, 90, 32) {
 }
 
 void MTGLifeScreen::onEnter() {
@@ -64,7 +64,7 @@ void MTGLifeScreen::layoutPlayerCards() {
 }
 
 Rect MTGLifeScreen::getPlayerCardRect(int index, int playerCount) const {
-    int16_t startY = Toolbar::HEIGHT + 4;
+    int16_t startY = Toolbar::HEIGHT + HEADER_HEIGHT + 4;
     int16_t availableH = 540 - startY - 4;
     int16_t availableW = 960 - 8;
 
@@ -157,6 +157,11 @@ void MTGLifeScreen::draw(M5GFX* gfx) {
         needsDisplay = true;
     }
 
+    // Draw header bar (always after full redraw)
+    if (needsDisplay) {
+        drawHeader(gfx);
+    }
+
     // Draw player cards (only if dirty)
     for (int i = 0; i < _gameState.playerCount; i++) {
         if (_playerCards[i] && _playerCards[i]->isDirty()) {
@@ -183,6 +188,11 @@ bool MTGLifeScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool release
     // Keyboard has priority when visible
     if (_keyboard) {
         return _keyboard->handleTouch(x, y, pressed, released);
+    }
+
+    // Check header buttons
+    if (handleHeaderTouch(x, y, released)) {
+        return true;
     }
 
     // Check player cards
@@ -228,4 +238,36 @@ void MTGLifeScreen::hideKeyboard(bool confirmed) {
     }
     _editingPlayerIndex = -1;
     setNeedsFullRedraw(true);
+}
+
+void MTGLifeScreen::drawHeader(M5GFX* gfx) {
+    int16_t headerY = Toolbar::HEIGHT;
+
+    // Header background (dark bar like in mockup)
+    gfx->fillRect(0, headerY, 960, HEADER_HEIGHT, TFT_BLACK);
+    gfx->drawRect(0, headerY, 960, HEADER_HEIGHT, TFT_BLACK);
+
+    // Title
+    gfx->setTextColor(TFT_WHITE);
+    gfx->setTextDatum(ML_DATUM);
+    gfx->drawString("LIFE COUNTER", 16, headerY + HEADER_HEIGHT / 2);
+
+    // Settings button
+    Rect r = _settingsButtonRect;
+    gfx->fillRect(r.x, r.y, r.w, r.h, TFT_BLACK);
+    gfx->drawRect(r.x, r.y, r.w, r.h, TFT_WHITE);
+    gfx->setTextColor(TFT_WHITE);
+    gfx->setTextDatum(MC_DATUM);
+    gfx->drawString("SETTINGS", r.x + r.w / 2, r.y + r.h / 2);
+}
+
+bool MTGLifeScreen::handleHeaderTouch(int16_t x, int16_t y, bool released) {
+    if (_settingsButtonRect.contains(x, y)) {
+        if (released && _settingsScreen) {
+            Sound::click();
+            _manager->setScreen(_settingsScreen);
+        }
+        return true;
+    }
+    return false;
 }

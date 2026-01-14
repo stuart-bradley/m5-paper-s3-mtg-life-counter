@@ -17,16 +17,25 @@ public:
     Player* getPlayer() { return _player; }
 
 private:
+    // Horizontal layout (wider cards)
     static constexpr int16_t BUTTON_HEIGHT = 48;
     static constexpr int16_t BUTTON_WIDTH = 80;
-    static constexpr int16_t BUTTON_MARGIN = 12;  // Margin from card edges
-    static constexpr int16_t NAME_HEIGHT = 56;    // Tall enough for size 4 text
+    static constexpr int16_t BUTTON_MARGIN = 12;
+    // Stacked layout (narrow cards) - same size buttons, just arranged differently
+    static constexpr int16_t STACK_BUTTON_HEIGHT = 44;
+    static constexpr int16_t STACK_BUTTON_WIDTH = 70;
+    // Threshold for switching layouts
+    static constexpr int16_t NARROW_THRESHOLD = 350;
+
+    static constexpr int16_t NAME_HEIGHT = 56;
     static constexpr uint32_t DEBOUNCE_MS = 100;
 
     Player* _player;
     NameTapCallback _onNameTap;
     int16_t _lastLife = 0;
     uint32_t _lastTouchTime = 0;
+
+    bool useStackedLayout() const { return _bounds.w < NARROW_THRESHOLD; }
 
     Rect getNameRect() const;
     Rect getLifeRect() const;

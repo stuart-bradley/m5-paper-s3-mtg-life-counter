@@ -22,18 +22,52 @@ Rect PlayerCard::getNameRect() const {
 }
 
 Rect PlayerCard::getLifeRect() const {
-    int16_t lifeY = _bounds.y + NAME_HEIGHT;
-    int16_t lifeH = _bounds.h - NAME_HEIGHT - BUTTON_HEIGHT - BUTTON_MARGIN * 2;
-    return Rect(_bounds.x, lifeY, _bounds.w, lifeH);
+    if (useStackedLayout()) {
+        // Life area is in the center, buttons are on sides
+        int16_t lifeY = _bounds.y + NAME_HEIGHT;
+        int16_t lifeH = _bounds.h - NAME_HEIGHT;
+        int16_t lifeX = _bounds.x + STACK_BUTTON_WIDTH + BUTTON_MARGIN;
+        int16_t lifeW = _bounds.w - 2 * (STACK_BUTTON_WIDTH + BUTTON_MARGIN);
+        return Rect(lifeX, lifeY, lifeW, lifeH);
+    } else {
+        int16_t lifeY = _bounds.y + NAME_HEIGHT;
+        int16_t lifeH = _bounds.h - NAME_HEIGHT - BUTTON_HEIGHT - BUTTON_MARGIN * 2;
+        return Rect(_bounds.x, lifeY, _bounds.w, lifeH);
+    }
 }
 
 Rect PlayerCard::getButtonRect(int index) const {
-    // Position buttons with margin from bottom and sides
-    int16_t btnY = _bounds.y + _bounds.h - BUTTON_HEIGHT - BUTTON_MARGIN;
-    int16_t availableW = _bounds.w - 2 * BUTTON_MARGIN;
-    int16_t spacing = (availableW - 4 * BUTTON_WIDTH) / 3;  // 3 gaps between 4 buttons
-    int16_t btnX = _bounds.x + BUTTON_MARGIN + index * (BUTTON_WIDTH + spacing);
-    return Rect(btnX, btnY, BUTTON_WIDTH, BUTTON_HEIGHT);
+    if (useStackedLayout()) {
+        // Stacked layout: buttons on left and right sides
+        // Layout:  [-1]  [LIFE]  [+1]
+        //          [-5]          [+5]
+        // index: 0=-5 (bottom-left), 1=-1 (top-left), 2=+1 (top-right), 3=+5 (bottom-right)
+        int16_t btnW = STACK_BUTTON_WIDTH;
+        int16_t btnH = STACK_BUTTON_HEIGHT;
+        int16_t vertGap = 4;
+        int16_t contentY = _bounds.y + NAME_HEIGHT + BUTTON_MARGIN;
+        int16_t contentH = _bounds.h - NAME_HEIGHT - BUTTON_MARGIN * 2;
+        int16_t centerY = contentY + contentH / 2;
+
+        switch (index) {
+            case 0:  // -5 bottom-left
+                return Rect(_bounds.x + BUTTON_MARGIN, centerY + vertGap / 2, btnW, btnH);
+            case 1:  // -1 top-left
+                return Rect(_bounds.x + BUTTON_MARGIN, centerY - btnH - vertGap / 2, btnW, btnH);
+            case 2:  // +1 top-right
+                return Rect(_bounds.x + _bounds.w - BUTTON_MARGIN - btnW, centerY - btnH - vertGap / 2, btnW, btnH);
+            case 3:  // +5 bottom-right
+            default:
+                return Rect(_bounds.x + _bounds.w - BUTTON_MARGIN - btnW, centerY + vertGap / 2, btnW, btnH);
+        }
+    } else {
+        // Horizontal layout: buttons in a row at the bottom
+        int16_t btnY = _bounds.y + _bounds.h - BUTTON_HEIGHT - BUTTON_MARGIN;
+        int16_t availableW = _bounds.w - 2 * BUTTON_MARGIN;
+        int16_t spacing = (availableW - 4 * BUTTON_WIDTH) / 3;  // 3 gaps between 4 buttons
+        int16_t btnX = _bounds.x + BUTTON_MARGIN + index * (BUTTON_WIDTH + spacing);
+        return Rect(btnX, btnY, BUTTON_WIDTH, BUTTON_HEIGHT);
+    }
 }
 
 void PlayerCard::drawButton(M5GFX* gfx, Rect r, const char* label) {
@@ -41,7 +75,7 @@ void PlayerCard::drawButton(M5GFX* gfx, Rect r, const char* label) {
     gfx->drawRect(r.x, r.y, r.w, r.h, TFT_BLACK);
     gfx->drawRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2, TFT_BLACK);
     gfx->setTextDatum(MC_DATUM);
-    gfx->setTextSize(2);  // Larger text for buttons
+    gfx->setTextSize(2);  // Same size for both layouts
     gfx->drawString(label, r.x + r.w / 2, r.y + r.h / 2);
 }
 

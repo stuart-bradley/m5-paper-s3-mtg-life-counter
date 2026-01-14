@@ -2,12 +2,14 @@
 #include "app/ScreenManager.hpp"
 #include "ui/screens/HomeScreen.hpp"
 #include "ui/screens/MTGLifeScreen.hpp"
+#include "ui/screens/MTGSettingsScreen.hpp"
 #include "utils/Sound.hpp"
 
 // Global instances
 ScreenManager screenManager;
 HomeScreen* homeScreen = nullptr;
 MTGLifeScreen* mtgLifeScreen = nullptr;
+MTGSettingsScreen* mtgSettingsScreen = nullptr;
 
 void setup() {
     auto cfg = M5.config();
@@ -27,6 +29,10 @@ void setup() {
     // Create screens
     homeScreen = new HomeScreen(&screenManager);
     mtgLifeScreen = new MTGLifeScreen(&screenManager);
+    mtgSettingsScreen = new MTGSettingsScreen(&screenManager);
+
+    // Link settings screen to life screen
+    mtgLifeScreen->setSettingsScreen(mtgSettingsScreen);
 
     // Start with home screen
     // For now, go directly to MTG life screen for testing
