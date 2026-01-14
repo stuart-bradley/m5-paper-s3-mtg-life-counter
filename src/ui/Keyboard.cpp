@@ -17,8 +17,9 @@ Keyboard::Keyboard(const char* initialText, Callback onComplete)
     _originalText[MAX_TEXT_LEN] = '\0';
     _cursorPos = strlen(_buffer);
 
-    // Size: full width, ~200px height at bottom
-    _bounds = Rect(0, 340, 960, 200);
+    // Size: full width, 270px height at bottom
+    // Calculation: 44px preview + 4 rows * (50px + 6px spacing) = 268px
+    _bounds = Rect(0, 270, 960, 270);
 }
 
 void Keyboard::appendChar(char c) {
@@ -105,22 +106,22 @@ const char* Keyboard::getKeyLabel(int row, int col) const {
 void Keyboard::draw(M5GFX* gfx) {
     if (!isDirty()) return;
 
-    // Background
+    // Background - solid white to cover any ghosting
     gfx->fillRect(_bounds.x, _bounds.y, _bounds.w, _bounds.h, TFT_WHITE);
     gfx->drawRect(_bounds.x, _bounds.y, _bounds.w, _bounds.h, TFT_BLACK);
+    gfx->drawRect(_bounds.x + 1, _bounds.y + 1, _bounds.w - 2, _bounds.h - 2, TFT_BLACK);
 
     gfx->setTextColor(TFT_BLACK);
 
-    // Text preview
+    // Text preview - large
     gfx->setTextDatum(MC_DATUM);
-    gfx->setTextSize(2);
+    gfx->setTextSize(3);
     gfx->drawString(_buffer, _bounds.x + _bounds.w / 2, _bounds.y + PREVIEW_HEIGHT / 2);
     gfx->drawLine(_bounds.x, _bounds.y + PREVIEW_HEIGHT,
                   _bounds.x + _bounds.w, _bounds.y + PREVIEW_HEIGHT, TFT_BLACK);
 
-    gfx->setTextSize(1);
-
     // Draw rows 0-2 (letter keys)
+    gfx->setTextSize(2);  // Larger text for keys
     for (int row = 0; row < 3; row++) {
         int numCols = (row == 0) ? 11 : 10;
         for (int col = 0; col < numCols; col++) {
@@ -132,7 +133,8 @@ void Keyboard::draw(M5GFX* gfx) {
         }
     }
 
-    // Draw row 3 (SPACE, DONE, CANCEL)
+    // Draw row 3 (SPACE, DONE, CANCEL) - slightly smaller text to fit labels
+    gfx->setTextSize(2);
     for (int col = 0; col < 3; col++) {
         Rect r = getKeyRect(3, col);
         const char* label = getKeyLabel(3, col);

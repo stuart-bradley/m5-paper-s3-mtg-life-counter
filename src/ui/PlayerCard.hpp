@@ -17,9 +17,10 @@ public:
     Player* getPlayer() { return _player; }
 
 private:
-    static constexpr int16_t BUTTON_HEIGHT = 36;
-    static constexpr int16_t BUTTON_WIDTH = 60;
-    static constexpr int16_t NAME_HEIGHT = 28;
+    static constexpr int16_t BUTTON_HEIGHT = 48;
+    static constexpr int16_t BUTTON_WIDTH = 80;
+    static constexpr int16_t BUTTON_MARGIN = 12;  // Margin from card edges
+    static constexpr int16_t NAME_HEIGHT = 56;    // Tall enough for size 4 text
     static constexpr uint32_t DEBOUNCE_MS = 100;
 
     Player* _player;

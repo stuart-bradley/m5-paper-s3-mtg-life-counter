@@ -13,10 +13,10 @@ public:
     bool handleTouch(int16_t x, int16_t y, bool pressed, bool released) override;
 
 private:
-    static constexpr int16_t KEY_WIDTH = 70;
-    static constexpr int16_t KEY_HEIGHT = 45;
-    static constexpr int16_t KEY_SPACING = 4;
-    static constexpr int16_t PREVIEW_HEIGHT = 40;
+    static constexpr int16_t KEY_WIDTH = 75;
+    static constexpr int16_t KEY_HEIGHT = 50;
+    static constexpr int16_t KEY_SPACING = 6;
+    static constexpr int16_t PREVIEW_HEIGHT = 44;
     static constexpr uint8_t MAX_TEXT_LEN = 15;
 
     char _buffer[MAX_TEXT_LEN + 1] = "";

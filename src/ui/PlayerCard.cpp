@@ -23,21 +23,25 @@ Rect PlayerCard::getNameRect() const {
 
 Rect PlayerCard::getLifeRect() const {
     int16_t lifeY = _bounds.y + NAME_HEIGHT;
-    int16_t lifeH = _bounds.h - NAME_HEIGHT - BUTTON_HEIGHT - 8;
+    int16_t lifeH = _bounds.h - NAME_HEIGHT - BUTTON_HEIGHT - BUTTON_MARGIN * 2;
     return Rect(_bounds.x, lifeY, _bounds.w, lifeH);
 }
 
 Rect PlayerCard::getButtonRect(int index) const {
-    int16_t btnY = _bounds.y + _bounds.h - BUTTON_HEIGHT;
-    int16_t spacing = (_bounds.w - 4 * BUTTON_WIDTH) / 5;
-    int16_t btnX = _bounds.x + spacing + index * (BUTTON_WIDTH + spacing);
+    // Position buttons with margin from bottom and sides
+    int16_t btnY = _bounds.y + _bounds.h - BUTTON_HEIGHT - BUTTON_MARGIN;
+    int16_t availableW = _bounds.w - 2 * BUTTON_MARGIN;
+    int16_t spacing = (availableW - 4 * BUTTON_WIDTH) / 3;  // 3 gaps between 4 buttons
+    int16_t btnX = _bounds.x + BUTTON_MARGIN + index * (BUTTON_WIDTH + spacing);
     return Rect(btnX, btnY, BUTTON_WIDTH, BUTTON_HEIGHT);
 }
 
 void PlayerCard::drawButton(M5GFX* gfx, Rect r, const char* label) {
+    // Draw button with 2px border for better visibility
     gfx->drawRect(r.x, r.y, r.w, r.h, TFT_BLACK);
+    gfx->drawRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2, TFT_BLACK);
     gfx->setTextDatum(MC_DATUM);
-    gfx->setTextSize(1);
+    gfx->setTextSize(2);  // Larger text for buttons
     gfx->drawString(label, r.x + r.w / 2, r.y + r.h / 2);
 }
 
@@ -58,10 +62,10 @@ void PlayerCard::draw(M5GFX* gfx) {
 
     gfx->setTextColor(TFT_BLACK);
 
-    // Name
+    // Name - same size as life text for readability
     Rect nameR = getNameRect();
     gfx->setTextDatum(MC_DATUM);
-    gfx->setTextSize(1);
+    gfx->setTextSize(4);
     gfx->drawString(_player->name, nameR.x + nameR.w / 2, nameR.y + nameR.h / 2);
     gfx->drawLine(nameR.x, nameR.y + nameR.h, nameR.x + nameR.w, nameR.y + nameR.h, TFT_BLACK);
 

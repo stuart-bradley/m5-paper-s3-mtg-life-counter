@@ -133,28 +133,47 @@ void MTGLifeScreen::update() {
 }
 
 void MTGLifeScreen::draw(M5GFX* gfx) {
+    bool needsDisplay = false;
+
     if (needsFullRedraw()) {
         gfx->fillScreen(TFT_WHITE);
         setNeedsFullRedraw(false);
-        _dirty = true;
+        // Mark all components dirty after full redraw
+        _toolbar.setDirty(true);
+        for (int i = 0; i < _gameState.playerCount; i++) {
+            if (_playerCards[i]) {
+                _playerCards[i]->setDirty(true);
+            }
+        }
+        if (_keyboard) {
+            _keyboard->setDirty(true);
+        }
+        needsDisplay = true;
     }
 
-    // Draw toolbar
-    _toolbar.setDirty(true);
-    _toolbar.draw(gfx);
+    // Draw toolbar (only if dirty)
+    if (_toolbar.isDirty()) {
+        _toolbar.draw(gfx);
+        needsDisplay = true;
+    }
 
-    // Draw player cards
+    // Draw player cards (only if dirty)
     for (int i = 0; i < _gameState.playerCount; i++) {
-        if (_playerCards[i]) {
-            _playerCards[i]->setDirty(true);
+        if (_playerCards[i] && _playerCards[i]->isDirty()) {
             _playerCards[i]->draw(gfx);
+            needsDisplay = true;
         }
     }
 
-    // Draw keyboard overlay if active
-    if (_keyboard) {
-        _keyboard->setDirty(true);
+    // Draw keyboard overlay if active (only if dirty)
+    if (_keyboard && _keyboard->isDirty()) {
         _keyboard->draw(gfx);
+        needsDisplay = true;
+    }
+
+    // Only trigger display refresh when something actually changed
+    if (needsDisplay) {
+        gfx->display();
     }
 
     _dirty = false;
@@ -185,9 +204,15 @@ void MTGLifeScreen::showKeyboard(int playerIndex) {
     _keyboard = new Keyboard(
         _gameState.players[playerIndex].name,
         [this](const char* result, bool confirmed) {
+            // Save index before hideKeyboard clears it
+            int idx = _editingPlayerIndex;
             hideKeyboard(confirmed);
-            if (confirmed && _editingPlayerIndex >= 0) {
-                _gameState.players[_editingPlayerIndex].setName(result);
+            if (confirmed && idx >= 0) {
+                _gameState.players[idx].setName(result);
+                // Mark player card dirty to show updated name
+                if (_playerCards[idx]) {
+                    _playerCards[idx]->setDirty(true);
+                }
                 saveState();
             }
         }
