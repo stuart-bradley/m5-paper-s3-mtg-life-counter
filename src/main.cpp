@@ -12,6 +12,11 @@
 // Global instances
 ScreenManager screenManager;
 Settings globalSettings;
+
+// Preference keys for screen restore (must match ScreenManager.cpp)
+static constexpr const char* PREF_NAMESPACE = "app";
+static constexpr const char* PREF_LAST_SCREEN = "lastScreen";
+
 HomeScreen* homeScreen = nullptr;
 MTGLifeScreen* mtgLifeScreen = nullptr;
 MTGSettingsScreen* mtgSettingsScreen = nullptr;
@@ -44,6 +49,12 @@ void setup() {
     mtgSettingsScreen = new MTGSettingsScreen(&screenManager);
     systemSettingsScreen = new SystemSettingsScreen(&screenManager);
 
+    // Register screens for ID-based navigation
+    screenManager.registerScreen(homeScreen);
+    screenManager.registerScreen(mtgLifeScreen);
+    screenManager.registerScreen(mtgSettingsScreen);
+    screenManager.registerScreen(systemSettingsScreen);
+
     // Link screens for navigation
     mtgLifeScreen->setSettingsScreen(mtgSettingsScreen);
     mtgLifeScreen->setHomeScreen(homeScreen);
@@ -51,8 +62,20 @@ void setup() {
     homeScreen->setMTGScreen(mtgLifeScreen);
     homeScreen->setSettingsScreen(systemSettingsScreen);
 
-    // Start with home screen
-    screenManager.setScreen(homeScreen);
+    // Restore last screen or default to home
+    Preferences appPrefs;
+    appPrefs.begin(PREF_NAMESPACE, true);  // Read-only
+    ScreenId savedScreenId = static_cast<ScreenId>(appPrefs.getUChar(PREF_LAST_SCREEN, 0));
+    appPrefs.end();
+
+    Screen* startScreen = screenManager.getScreenById(savedScreenId);
+    if (startScreen) {
+        Serial.printf("Restoring screen ID: %d\n", static_cast<int>(savedScreenId));
+        screenManager.setScreen(startScreen);
+    } else {
+        Serial.println("Starting with home screen (no saved screen or invalid ID)");
+        screenManager.setScreen(homeScreen);
+    }
 
     Serial.println("Setup complete. Starting main loop.");
 }

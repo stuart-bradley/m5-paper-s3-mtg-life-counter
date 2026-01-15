@@ -14,6 +14,8 @@ class MTGLifeScreen : public Screen {
    public:
     MTGLifeScreen(ScreenManager* manager);
 
+    ScreenId getScreenId() const override { return ScreenId::MTGLife; }
+
     void onEnter() override;
     void onExit() override;
     void update() override;

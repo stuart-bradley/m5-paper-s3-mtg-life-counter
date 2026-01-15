@@ -10,6 +10,8 @@ class HomeScreen : public Screen {
    public:
     HomeScreen(ScreenManager* manager);
 
+    ScreenId getScreenId() const override { return ScreenId::Home; }
+
     void setMTGScreen(Screen* screen) { _mtgScreen = screen; }
     void setSettingsScreen(Screen* screen) { _settingsScreen = screen; }
 

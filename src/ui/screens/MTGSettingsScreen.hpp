@@ -14,6 +14,8 @@ class MTGSettingsScreen : public Screen {
     MTGSettingsScreen(ScreenManager* manager);
     ~MTGSettingsScreen();
 
+    ScreenId getScreenId() const override { return ScreenId::MTGSettings; }
+
     void onEnter() override;
     void onExit() override;
     void update() override;

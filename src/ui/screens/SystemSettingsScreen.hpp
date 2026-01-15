@@ -12,6 +12,8 @@ class SystemSettingsScreen : public Screen {
    public:
     SystemSettingsScreen(ScreenManager* manager);
 
+    ScreenId getScreenId() const override { return ScreenId::SystemSettings; }
+
     void setHomeScreen(Screen* screen);
 
     void onEnter() override;
