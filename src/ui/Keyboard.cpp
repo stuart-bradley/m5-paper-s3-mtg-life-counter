@@ -3,11 +3,17 @@
 #include <cstring>
 #include "../utils/Sound.hpp"
 
-// Keyboard layout
-static const char* ROW0 = "QWERTYUIOP";  // 10 keys + backspace
-static const char* ROW1 = "ASDFGHJKL'";  // 10 keys
-static const char* ROW2 = "^ZXCVBNM.^";  // shift + 8 keys + shift (^ = shift indicator)
+// Keyboard layout - letter mode
+static const char* LETTER_ROW0 = "QWERTYUIOP";  // 10 keys + backspace
+static const char* LETTER_ROW1 = "ASDFGHJKL'";  // 10 keys
+static const char* LETTER_ROW2 = "#ZXCVBNM.^";  // 123 + 8 keys + shift (# = 123 button, ^ = shift)
 // Row 3: SPACE, DONE, CANCEL (special handling)
+
+// Keyboard layout - number/symbol mode
+static const char* NUM_ROW0 = "1234567890";   // 10 keys + backspace
+static const char* NUM_ROW1 = "-/:;()$&@\"";  // 10 keys
+static const char* NUM_ROW2 =
+    "#.,?!'*+=#";  // ABC + symbols (first # = ABC button, last position is also typeable)
 
 Keyboard::Keyboard(const char* initialText, Callback onComplete) : _onComplete(onComplete) {
     strncpy(_buffer, initialText, MAX_TEXT_LEN);
@@ -71,16 +77,26 @@ Rect Keyboard::getKeyRect(int row, int col) const {
 }
 
 char Keyboard::getKeyChar(int row, int col) const {
-    const char* rowStr = (row == 0) ? ROW0 : (row == 1) ? ROW1 : ROW2;
+    const char* rowStr;
+    if (_numMode) {
+        rowStr = (row == 0) ? NUM_ROW0 : (row == 1) ? NUM_ROW1 : NUM_ROW2;
+    } else {
+        rowStr = (row == 0) ? LETTER_ROW0 : (row == 1) ? LETTER_ROW1 : LETTER_ROW2;
+    }
+
     int len = strlen(rowStr);
     if (col >= len)
         return '\0';
 
     char c = rowStr[col];
-    if (c == '^')
-        return '\0';  // Shift key, not a char
+    // Row 2 position 0 is always the mode toggle (123/ABC), not a char
+    if (row == 2 && col == 0)
+        return '\0';
+    // Row 2 position 9 in letter mode is shift
+    if (!_numMode && row == 2 && col == 9 && c == '^')
+        return '\0';
 
-    if (!_shifted && c >= 'A' && c <= 'Z') {
+    if (!_numMode && !_shifted && c >= 'A' && c <= 'Z') {
         return c + 32;  // lowercase
     }
     return c;
@@ -99,7 +115,15 @@ const char* Keyboard::getKeyLabel(int row, int col) const {
         if (col == 2)
             return "CANCEL";
     }
-    if (row == 2 && (col == 0 || col == 9)) {
+    // Mode toggle button (first key on row 2)
+    if (row == 2 && col == 0) {
+        return _numMode ? "ABC" : "123";
+    }
+    // Shift button (last key on row 2) - only in letter mode
+    if (row == 2 && col == 9) {
+        if (_numMode) {
+            return "#+=";  // More symbols indicator
+        }
         return _shifted ? "^" : "v";  // Shift indicator
     }
 
@@ -171,8 +195,12 @@ bool Keyboard::handleTouch(int16_t x, int16_t y, bool pressed, bool released) {
                 if (row == 0 && col == 10) {
                     // Backspace
                     backspace();
-                } else if (row == 2 && (col == 0 || col == 9)) {
-                    // Shift
+                } else if (row == 2 && col == 0) {
+                    // 123/ABC toggle
+                    _numMode = !_numMode;
+                    setDirty();
+                } else if (row == 2 && col == 9 && !_numMode) {
+                    // Shift (letter mode only)
                     _shifted = !_shifted;
                     setDirty();
                 } else {

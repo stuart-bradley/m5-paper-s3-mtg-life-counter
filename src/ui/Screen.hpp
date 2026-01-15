@@ -7,6 +7,7 @@ enum class ScreenId : uint8_t {
     MTGLife = 1,
     MTGSettings = 2,
     SystemSettings = 3,
+    WiFi = 4,
 };
 
 class Screen {

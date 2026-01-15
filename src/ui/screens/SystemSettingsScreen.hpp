@@ -15,6 +15,7 @@ class SystemSettingsScreen : public Screen {
     ScreenId getScreenId() const override { return ScreenId::SystemSettings; }
 
     void setHomeScreen(Screen* screen);
+    void setWiFiScreen(Screen* screen);
 
     void onEnter() override;
     void onExit() override;
@@ -27,9 +28,11 @@ class SystemSettingsScreen : public Screen {
     static constexpr int16_t BUTTON_H = 40;
     static constexpr int16_t LABEL_X = 60;
     static constexpr int16_t BUTTONS_X = 300;
+    static constexpr int16_t WIFI_BUTTON_W = 200;
 
     ScreenManager* _manager;
     Screen* _homeScreen = nullptr;
+    Screen* _wifiScreen = nullptr;
     Toolbar _toolbar;
     HeaderBar _headerBar;
     Settings _settings;

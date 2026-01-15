@@ -19,6 +19,10 @@ void SystemSettingsScreen::setHomeScreen(Screen* screen) {
     });
 }
 
+void SystemSettingsScreen::setWiFiScreen(Screen* screen) {
+    _wifiScreen = screen;
+}
+
 void SystemSettingsScreen::loadSettings() {
     Preferences prefs;
     _settings.load(prefs);
@@ -101,11 +105,24 @@ void SystemSettingsScreen::draw(M5GFX* gfx) {
         // Draw setting rows
         int16_t startY = Toolbar::HEIGHT + HeaderBar::HEIGHT + 40;
 
-        // Row 0: Sound
-        drawRow(gfx, startY, "Sound:", SOUND_OPTIONS, 2, getSoundIndex());
+        // Row 0: WiFi (navigation row)
+        gfx->setTextColor(TFT_BLACK);
+        gfx->setTextDatum(ML_DATUM);
+        gfx->setTextSize(2);
+        gfx->drawString("WiFi:", LABEL_X, startY + BUTTON_H / 2);
+        // Draw navigate button
+        int16_t wifiButtonX = BUTTONS_X;
+        gfx->fillRect(wifiButtonX, startY, WIFI_BUTTON_W, BUTTON_H, TFT_WHITE);
+        gfx->drawRect(wifiButtonX, startY, WIFI_BUTTON_W, BUTTON_H, TFT_BLACK);
+        gfx->setTextDatum(MC_DATUM);
+        gfx->setTextSize(1);
+        gfx->drawString("Configure >", wifiButtonX + WIFI_BUTTON_W / 2, startY + BUTTON_H / 2);
 
-        // Row 1: Auto-Sleep
-        drawRow(gfx, startY + ROW_HEIGHT, "Auto-Sleep:", SLEEP_OPTIONS, 4, getSleepIndex());
+        // Row 1: Sound
+        drawRow(gfx, startY + ROW_HEIGHT, "Sound:", SOUND_OPTIONS, 2, getSoundIndex());
+
+        // Row 2: Auto-Sleep
+        drawRow(gfx, startY + ROW_HEIGHT * 2, "Auto-Sleep:", SLEEP_OPTIONS, 4, getSleepIndex());
     }
 
     // Update toolbar time
@@ -131,9 +148,20 @@ bool SystemSettingsScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool 
     if (!released)
         return pressed;
 
-    // Check sound buttons (row 0)
+    // Check WiFi button (row 0)
+    int16_t startY = Toolbar::HEIGHT + HeaderBar::HEIGHT + 40;
+    Rect wifiRect(BUTTONS_X, startY, WIFI_BUTTON_W, BUTTON_H);
+    if (wifiRect.contains(x, y)) {
+        Sound::click();
+        if (_wifiScreen) {
+            _manager->setScreen(_wifiScreen);
+        }
+        return true;
+    }
+
+    // Check sound buttons (row 1)
     for (int i = 0; i < 2; i++) {
-        Rect r = getButtonRect(0, i);
+        Rect r = getButtonRect(1, i);
         if (r.contains(x, y)) {
             bool newValue = (i == 1);
             if (_settings.soundEnabled != newValue) {
@@ -146,9 +174,9 @@ bool SystemSettingsScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool 
         }
     }
 
-    // Check sleep buttons (row 1)
+    // Check sleep buttons (row 2)
     for (int i = 0; i < 4; i++) {
-        Rect r = getButtonRect(1, i);
+        Rect r = getButtonRect(2, i);
         if (r.contains(x, y)) {
             if (_settings.sleepTimeoutSecs != SLEEP_VALUES[i]) {
                 _settings.sleepTimeoutSecs = SLEEP_VALUES[i];

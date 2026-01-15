@@ -6,6 +6,7 @@
 #include "ui/screens/MTGLifeScreen.hpp"
 #include "ui/screens/MTGSettingsScreen.hpp"
 #include "ui/screens/SystemSettingsScreen.hpp"
+#include "ui/screens/WiFiScreen.hpp"
 #include "utils/Power.hpp"
 #include "utils/Sound.hpp"
 
@@ -21,6 +22,7 @@ HomeScreen* homeScreen = nullptr;
 MTGLifeScreen* mtgLifeScreen = nullptr;
 MTGSettingsScreen* mtgSettingsScreen = nullptr;
 SystemSettingsScreen* systemSettingsScreen = nullptr;
+WiFiScreen* wifiScreen = nullptr;
 
 void setup() {
     auto cfg = M5.config();
@@ -48,17 +50,21 @@ void setup() {
     mtgLifeScreen = new MTGLifeScreen(&screenManager);
     mtgSettingsScreen = new MTGSettingsScreen(&screenManager);
     systemSettingsScreen = new SystemSettingsScreen(&screenManager);
+    wifiScreen = new WiFiScreen(&screenManager);
 
     // Register screens for ID-based navigation
     screenManager.registerScreen(homeScreen);
     screenManager.registerScreen(mtgLifeScreen);
     screenManager.registerScreen(mtgSettingsScreen);
     screenManager.registerScreen(systemSettingsScreen);
+    screenManager.registerScreen(wifiScreen);
 
     // Link screens for navigation
     mtgLifeScreen->setSettingsScreen(mtgSettingsScreen);
     mtgLifeScreen->setHomeScreen(homeScreen);
     systemSettingsScreen->setHomeScreen(homeScreen);
+    systemSettingsScreen->setWiFiScreen(wifiScreen);
+    wifiScreen->setSettingsScreen(systemSettingsScreen);
     homeScreen->setMTGScreen(mtgLifeScreen);
     homeScreen->setSettingsScreen(systemSettingsScreen);
 

@@ -17,12 +17,13 @@ class Keyboard : public Component {
     static constexpr int16_t KEY_HEIGHT = 50;
     static constexpr int16_t KEY_SPACING = 6;
     static constexpr int16_t PREVIEW_HEIGHT = 44;
-    static constexpr uint8_t MAX_TEXT_LEN = 15;
+    static constexpr uint8_t MAX_TEXT_LEN = 32;
 
     char _buffer[MAX_TEXT_LEN + 1] = "";
     char _originalText[MAX_TEXT_LEN + 1] = "";
     uint8_t _cursorPos = 0;
-    bool _shifted = true;  // Start with shift on for first letter
+    bool _shifted = true;   // Start with shift on for first letter
+    bool _numMode = false;  // Number/symbol mode
     Callback _onComplete;
 
     void appendChar(char c);

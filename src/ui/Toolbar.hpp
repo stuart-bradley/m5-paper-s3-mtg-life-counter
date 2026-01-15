@@ -16,4 +16,6 @@ class Toolbar : public Component {
     int8_t _batteryLevel = -1;
     uint8_t _hour = 0;
     uint8_t _minute = 0;
+    bool _wifiConnected = false;
+    int8_t _wifiStrength = 0;  // 0=none, 1=weak, 2=fair, 3=good, 4=excellent
 };
