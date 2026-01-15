@@ -1,13 +1,17 @@
 #include <M5Unified.h>
+#include <Preferences.h>
 #include "app/ScreenManager.hpp"
+#include "models/Settings.hpp"
 #include "ui/screens/HomeScreen.hpp"
 #include "ui/screens/MTGLifeScreen.hpp"
 #include "ui/screens/MTGSettingsScreen.hpp"
 #include "ui/screens/SystemSettingsScreen.hpp"
+#include "utils/Power.hpp"
 #include "utils/Sound.hpp"
 
 // Global instances
 ScreenManager screenManager;
+Settings globalSettings;
 HomeScreen* homeScreen = nullptr;
 MTGLifeScreen* mtgLifeScreen = nullptr;
 MTGSettingsScreen* mtgSettingsScreen = nullptr;
@@ -23,10 +27,16 @@ void setup() {
     M5.Display.fillScreen(TFT_WHITE);
 
     Sound::init();
+    Power::init();
+
+    // Load settings for sleep timeout
+    Preferences prefs;
+    globalSettings.load(prefs);
 
     Serial.println("\n========================================");
     Serial.println("M5Paper S3 MTG Life Counter");
     Serial.println("========================================\n");
+    Serial.printf("Sleep timeout: %d seconds\n", globalSettings.sleepTimeoutSecs);
 
     // Create screens
     homeScreen = new HomeScreen(&screenManager);
@@ -47,6 +57,18 @@ void setup() {
     Serial.println("Setup complete. Starting main loop.");
 }
 
+void enterSleepMode() {
+    Serial.println("Entering sleep mode...");
+
+    // Trigger current screen exit to save state
+    Screen* current = screenManager.getCurrentScreen();
+    if (current) {
+        current->onExit();
+    }
+
+    Power::powerOff();
+}
+
 void loop() {
     M5.update();
 
@@ -57,8 +79,15 @@ void loop() {
         bool released = touch.wasReleased();
 
         if (pressed || released) {
+            Power::resetInactivityTimer();
             screenManager.handleTouch(touch.x, touch.y, pressed, released);
         }
+    }
+
+    // Check for sleep timeout
+    if (Power::shouldSleep(globalSettings.sleepTimeoutSecs)) {
+        enterSleepMode();
+        return;  // Won't reach here after powerOff
     }
 
     // Update current screen
