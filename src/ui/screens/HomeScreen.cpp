@@ -9,14 +9,14 @@ void HomeScreen::onEnter() {
     setNeedsFullRedraw(true);
 }
 
-Rect HomeScreen::getSettingsCardRect() const {
+Rect HomeScreen::getMTGCardRect() const {
     int16_t totalWidth = 2 * CARD_WIDTH + CARD_SPACING;
     int16_t startX = (960 - totalWidth) / 2;
     int16_t y = Toolbar::HEIGHT + (540 - Toolbar::HEIGHT - CARD_HEIGHT) / 2;
     return Rect(startX, y, CARD_WIDTH, CARD_HEIGHT);
 }
 
-Rect HomeScreen::getMTGCardRect() const {
+Rect HomeScreen::getSettingsCardRect() const {
     int16_t totalWidth = 2 * CARD_WIDTH + CARD_SPACING;
     int16_t startX = (960 - totalWidth) / 2;
     int16_t y = Toolbar::HEIGHT + (540 - Toolbar::HEIGHT - CARD_HEIGHT) / 2;
@@ -49,9 +49,9 @@ void HomeScreen::draw(M5GFX* gfx) {
         _toolbar.setDirty(true);
         needsDisplay = true;
 
-        // Draw app cards (only on full redraw)
-        drawAppCard(gfx, getSettingsCardRect(), ICON_SETTINGS, "Settings");
+        // Draw app cards (only on full redraw) - Settings always last
         drawAppCard(gfx, getMTGCardRect(), ICON_MTG, "MTG Life");
+        drawAppCard(gfx, getSettingsCardRect(), ICON_SETTINGS, "Settings");
     }
 
     // Update toolbar time
