@@ -3,6 +3,7 @@
 #include <Preferences.h>
 #include "../../models/GameState.hpp"
 #include "../Button.hpp"
+#include "../HeaderBar.hpp"
 #include "../Screen.hpp"
 #include "../Toolbar.hpp"
 
@@ -22,10 +23,10 @@ class MTGSettingsScreen : public Screen {
    private:
     ScreenManager* _manager;
     Toolbar _toolbar;
+    HeaderBar _headerBar;
     GameState _gameState;
 
     // UI Buttons
-    Button* _backButton = nullptr;
     Button* _playerButtons[5] = {nullptr};  // 2,3,4,5,6 players
     Button* _lifeButtons[4] = {nullptr};    // 20,25,30,40 life
     Button* _resetLifeButton = nullptr;

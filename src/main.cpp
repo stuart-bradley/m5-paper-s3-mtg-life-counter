@@ -3,6 +3,7 @@
 #include "ui/screens/HomeScreen.hpp"
 #include "ui/screens/MTGLifeScreen.hpp"
 #include "ui/screens/MTGSettingsScreen.hpp"
+#include "ui/screens/SystemSettingsScreen.hpp"
 #include "utils/Sound.hpp"
 
 // Global instances
@@ -10,6 +11,7 @@ ScreenManager screenManager;
 HomeScreen* homeScreen = nullptr;
 MTGLifeScreen* mtgLifeScreen = nullptr;
 MTGSettingsScreen* mtgSettingsScreen = nullptr;
+SystemSettingsScreen* systemSettingsScreen = nullptr;
 
 void setup() {
     auto cfg = M5.config();
@@ -30,13 +32,17 @@ void setup() {
     homeScreen = new HomeScreen(&screenManager);
     mtgLifeScreen = new MTGLifeScreen(&screenManager);
     mtgSettingsScreen = new MTGSettingsScreen(&screenManager);
+    systemSettingsScreen = new SystemSettingsScreen(&screenManager);
 
-    // Link settings screen to life screen
+    // Link screens for navigation
     mtgLifeScreen->setSettingsScreen(mtgSettingsScreen);
+    mtgLifeScreen->setHomeScreen(homeScreen);
+    systemSettingsScreen->setHomeScreen(homeScreen);
+    homeScreen->setMTGScreen(mtgLifeScreen);
+    homeScreen->setSettingsScreen(systemSettingsScreen);
 
     // Start with home screen
-    // For now, go directly to MTG life screen for testing
-    screenManager.setScreen(mtgLifeScreen);
+    screenManager.setScreen(homeScreen);
 
     Serial.println("Setup complete. Starting main loop.");
 }

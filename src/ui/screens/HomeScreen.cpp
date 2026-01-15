@@ -30,30 +30,42 @@ void HomeScreen::drawAppCard(M5GFX* gfx, Rect r, const uint8_t* icon, const char
 
     // Icon centered in upper portion
     int16_t iconX = r.x + (r.w - ICON_SIZE) / 2;
-    int16_t iconY = r.y + 30;
+    int16_t iconY = r.y + 20;
     drawIcon(gfx, icon, iconX, iconY, TFT_BLACK);
 
-    // Label below icon
+    // Label below icon (larger text)
     gfx->setTextColor(TFT_BLACK);
     gfx->setTextDatum(MC_DATUM);
-    gfx->setTextSize(1);
-    gfx->drawString(label, r.x + r.w / 2, r.y + r.h - 30);
+    gfx->setTextSize(2);
+    gfx->drawString(label, r.x + r.w / 2, r.y + r.h - 24);
 }
 
 void HomeScreen::draw(M5GFX* gfx) {
+    bool needsDisplay = false;
+
     if (needsFullRedraw()) {
         gfx->fillScreen(TFT_WHITE);
         setNeedsFullRedraw(false);
+        _toolbar.setDirty(true);
+        needsDisplay = true;
+
+        // Draw app cards (only on full redraw)
+        drawAppCard(gfx, getSettingsCardRect(), ICON_SETTINGS, "Settings");
+        drawAppCard(gfx, getMTGCardRect(), ICON_MTG, "MTG Life");
     }
 
-    // Update and draw toolbar
+    // Update toolbar time
     _toolbar.update();
-    _toolbar.setDirty(true);  // Force redraw on full screen
-    _toolbar.draw(gfx);
 
-    // Draw app cards
-    drawAppCard(gfx, getSettingsCardRect(), ICON_SETTINGS, "Settings");
-    drawAppCard(gfx, getMTGCardRect(), ICON_MTG, "MTG Life");
+    // Draw toolbar only if dirty
+    if (_toolbar.isDirty()) {
+        _toolbar.draw(gfx);
+        needsDisplay = true;
+    }
+
+    if (needsDisplay) {
+        gfx->display();
+    }
 }
 
 bool HomeScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool released) {
@@ -63,14 +75,18 @@ bool HomeScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool released) 
     Rect settingsR = getSettingsCardRect();
     if (settingsR.contains(x, y)) {
         Sound::click();
-        // TODO: Navigate to settings screen
+        if (_settingsScreen) {
+            _manager->setScreen(_settingsScreen);
+        }
         return true;
     }
 
     Rect mtgR = getMTGCardRect();
     if (mtgR.contains(x, y)) {
         Sound::click();
-        // TODO: Navigate to MTG life screen
+        if (_mtgScreen) {
+            _manager->setScreen(_mtgScreen);
+        }
         return true;
     }
 

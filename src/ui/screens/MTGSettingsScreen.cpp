@@ -23,7 +23,10 @@ static constexpr int16_t SELECT_BTN_W = 64;
 static constexpr int16_t SELECT_BTN_H = 50;
 static constexpr int16_t RESET_BTN_H = 70;
 
-MTGSettingsScreen::MTGSettingsScreen(ScreenManager* manager) : _manager(manager) {}
+MTGSettingsScreen::MTGSettingsScreen(ScreenManager* manager) : _manager(manager) {
+    _headerBar.setTitle("GAME SETTINGS");
+    _headerBar.setLeftButton("< BACK", [this]() { _manager->goBack(); });
+}
 
 MTGSettingsScreen::~MTGSettingsScreen() {
     destroyButtons();
@@ -52,12 +55,6 @@ void MTGSettingsScreen::saveState() {
 
 void MTGSettingsScreen::createButtons() {
     destroyButtons();
-
-    // Back button in header
-    _backButton = new Button(Rect(16, HEADER_Y + 6, 80, 32), "< BACK", [this]() {
-        Sound::click();
-        _manager->goBack();
-    });
 
     // Left column, Section 1: Player count buttons (2-6)
     const int16_t playerSectionY = CONTENT_Y;
@@ -133,8 +130,6 @@ void MTGSettingsScreen::createButtons() {
 }
 
 void MTGSettingsScreen::destroyButtons() {
-    delete _backButton;
-    _backButton = nullptr;
     for (int i = 0; i < 5; i++) {
         delete _playerButtons[i];
         _playerButtons[i] = nullptr;
@@ -235,20 +230,7 @@ void MTGSettingsScreen::draw(M5GFX* gfx) {
         _toolbar.draw(gfx);
 
         // Draw header bar
-        gfx->fillRect(0, HEADER_Y, SCREEN_W, HEADER_H, TFT_BLACK);
-        gfx->setTextColor(TFT_WHITE);
-        gfx->setTextDatum(ML_DATUM);
-        gfx->drawString("GAME SETTINGS", 120, HEADER_Y + HEADER_H / 2);
-
-        // Draw back button in header
-        if (_backButton) {
-            Rect r = _backButton->getBounds();
-            gfx->fillRect(r.x, r.y, r.w, r.h, TFT_BLACK);
-            gfx->drawRect(r.x, r.y, r.w, r.h, TFT_WHITE);
-            gfx->setTextColor(TFT_WHITE);
-            gfx->setTextDatum(MC_DATUM);
-            gfx->drawString("< BACK", r.x + r.w / 2, r.y + r.h / 2);
-        }
+        _headerBar.draw(gfx);
 
         // Left column - Section 1: Players
         drawSection(gfx, LEFT_COL_X, CONTENT_Y, LEFT_COL_W, SECTION_H, "PLAYERS");
@@ -418,8 +400,8 @@ bool MTGSettingsScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool rel
         return pressed || released;
     }
 
-    // Back button
-    if (_backButton && _backButton->handleTouch(x, y, pressed, released)) {
+    // Header bar (back button)
+    if (_headerBar.handleTouch(x, y, pressed, released)) {
         return true;
     }
 
