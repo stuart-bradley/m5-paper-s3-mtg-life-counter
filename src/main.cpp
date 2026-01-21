@@ -1,28 +1,22 @@
 #include <M5Unified.h>
 #include <Preferences.h>
-#include "app/ScreenManager.hpp"
+#include "app/AppRegistry.hpp"
+#include "app/Navigation.hpp"
+#include "apps/home/HomeApp.hpp"
+#include "apps/mtg/MTGApp.hpp"
+#include "apps/settings/SettingsApp.hpp"
 #include "models/Settings.hpp"
-#include "ui/screens/HomeScreen.hpp"
-#include "ui/screens/MTGLifeScreen.hpp"
-#include "ui/screens/MTGSettingsScreen.hpp"
-#include "ui/screens/SystemSettingsScreen.hpp"
-#include "ui/screens/WiFiScreen.hpp"
+#include "utils/Log.hpp"
 #include "utils/Power.hpp"
 #include "utils/Sound.hpp"
 
 // Global instances
-ScreenManager screenManager;
 Settings globalSettings;
 
-// Preference keys for screen restore (must match ScreenManager.cpp)
-static constexpr const char* PREF_NAMESPACE = "app";
-static constexpr const char* PREF_LAST_SCREEN = "lastScreen";
-
-HomeScreen* homeScreen = nullptr;
-MTGLifeScreen* mtgLifeScreen = nullptr;
-MTGSettingsScreen* mtgSettingsScreen = nullptr;
-SystemSettingsScreen* systemSettingsScreen = nullptr;
-WiFiScreen* wifiScreen = nullptr;
+// App instances
+static HomeApp homeApp;
+static MTGApp mtgApp;
+static SettingsApp settingsApp;
 
 void setup() {
     auto cfg = M5.config();
@@ -40,66 +34,36 @@ void setup() {
     Preferences prefs;
     globalSettings.load(prefs);
 
-    Serial.println("\n========================================");
-    Serial.println("M5Paper S3 MTG Life Counter");
-    Serial.println("========================================\n");
-    Serial.printf("Sleep timeout: %d seconds\n", globalSettings.sleepTimeoutSecs);
+    LOG_I("========================================");
+    LOG_I("M5Paper S3 App Platform");
+    LOG_I("========================================");
+    LOG_I("Sleep timeout: %d seconds", globalSettings.sleepTimeoutSecs);
 
-    // Create screens
-    homeScreen = new HomeScreen(&screenManager);
-    mtgLifeScreen = new MTGLifeScreen(&screenManager);
-    mtgSettingsScreen = new MTGSettingsScreen(&screenManager);
-    systemSettingsScreen = new SystemSettingsScreen(&screenManager);
-    wifiScreen = new WiFiScreen(&screenManager);
+    // Register apps with the registry
+    auto& registry = AppRegistry::instance();
+    registry.registerApp(&homeApp);
+    registry.registerApp(&mtgApp);
+    registry.registerApp(&settingsApp);
 
-    // Register screens for ID-based navigation
-    screenManager.registerScreen(homeScreen);
-    screenManager.registerScreen(mtgLifeScreen);
-    screenManager.registerScreen(mtgSettingsScreen);
-    screenManager.registerScreen(systemSettingsScreen);
-    screenManager.registerScreen(wifiScreen);
+    // Restore previous navigation state or go home
+    Navigation::instance().restoreState();
 
-    // Link screens for navigation
-    mtgLifeScreen->setSettingsScreen(mtgSettingsScreen);
-    mtgLifeScreen->setHomeScreen(homeScreen);
-    systemSettingsScreen->setHomeScreen(homeScreen);
-    systemSettingsScreen->setWiFiScreen(wifiScreen);
-    wifiScreen->setSettingsScreen(systemSettingsScreen);
-    homeScreen->setMTGScreen(mtgLifeScreen);
-    homeScreen->setSettingsScreen(systemSettingsScreen);
-
-    // Restore last screen or default to home
-    Preferences appPrefs;
-    appPrefs.begin(PREF_NAMESPACE, true);  // Read-only
-    ScreenId savedScreenId = static_cast<ScreenId>(appPrefs.getUChar(PREF_LAST_SCREEN, 0));
-    appPrefs.end();
-
-    Screen* startScreen = screenManager.getScreenById(savedScreenId);
-    if (startScreen) {
-        Serial.printf("Restoring screen ID: %d\n", static_cast<int>(savedScreenId));
-        screenManager.setScreen(startScreen);
-    } else {
-        Serial.println("Starting with home screen (no saved screen or invalid ID)");
-        screenManager.setScreen(homeScreen);
-    }
-
-    Serial.println("Setup complete. Starting main loop.");
+    LOG_I("Setup complete. Starting main loop.");
 }
 
 void enterSleepMode() {
-    Serial.println("Entering sleep mode...");
+    LOG_I("Entering sleep mode...");
 
-    // Trigger current screen exit to save state
-    Screen* current = screenManager.getCurrentScreen();
-    if (current) {
-        current->onExit();
-    }
+    // Save navigation state before sleep
+    Navigation::instance().saveState();
 
     Power::powerOff();
 }
 
 void loop() {
     M5.update();
+
+    auto& nav = Navigation::instance();
 
     // Handle touch
     if (M5.Touch.getCount() > 0) {
@@ -109,7 +73,7 @@ void loop() {
 
         if (pressed || released) {
             Power::resetInactivityTimer();
-            screenManager.handleTouch(touch.x, touch.y, pressed, released);
+            nav.handleTouch(touch.x, touch.y, pressed, released);
         }
     }
 
@@ -119,11 +83,9 @@ void loop() {
         return;  // Won't reach here after powerOff
     }
 
-    // Update current screen
-    screenManager.update();
-
-    // Draw current screen
-    screenManager.draw(&M5.Display);
+    // Update and draw
+    nav.update();
+    nav.draw(&M5.Display);
 
     delay(20);  // ~50fps update rate
 }

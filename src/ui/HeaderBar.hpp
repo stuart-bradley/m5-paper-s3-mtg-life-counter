@@ -3,14 +3,13 @@
 #include <M5GFX.h>
 #include <functional>
 #include "Component.hpp"
+#include "Layout.hpp"
 #include "Toolbar.hpp"
 
 class HeaderBar : public Component {
    public:
-    static constexpr int16_t HEIGHT = 44;
-    static constexpr int16_t BUTTON_W = 90;
-    static constexpr int16_t BUTTON_H = 32;
-    static constexpr int16_t BUTTON_MARGIN = 10;
+    static constexpr int16_t HEIGHT = Layout::HEADER_H;
+    // Button sizes come from Layout
 
     HeaderBar();
 

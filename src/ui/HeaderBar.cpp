@@ -1,12 +1,15 @@
 #include "HeaderBar.hpp"
 #include "../utils/Sound.hpp"
+#include "Layout.hpp"
 
 HeaderBar::HeaderBar() {
     int16_t y = Toolbar::HEIGHT;
-    _bounds = Rect(0, y, 960, HEIGHT);
-    _leftButtonRect = Rect(BUTTON_MARGIN, y + (HEIGHT - BUTTON_H) / 2, BUTTON_W, BUTTON_H);
+    _bounds = Rect(0, y, Layout::screenW(), HEIGHT);
+    _leftButtonRect = Rect(Layout::BUTTON_MARGIN, y + (HEIGHT - Layout::BUTTON_H) / 2,
+                           Layout::BUTTON_W, Layout::BUTTON_H);
     _rightButtonRect =
-        Rect(960 - BUTTON_MARGIN - BUTTON_W, y + (HEIGHT - BUTTON_H) / 2, BUTTON_W, BUTTON_H);
+        Rect(Layout::screenW() - Layout::BUTTON_MARGIN - Layout::BUTTON_W,
+             y + (HEIGHT - Layout::BUTTON_H) / 2, Layout::BUTTON_W, Layout::BUTTON_H);
 }
 
 void HeaderBar::setLeftButton(const char* label, std::function<void()> callback) {
@@ -38,7 +41,7 @@ void HeaderBar::draw(M5GFX* gfx) {
         gfx->setTextColor(TFT_WHITE);
         gfx->setTextDatum(MC_DATUM);
         gfx->setTextSize(1);
-        gfx->drawString(_title, 480, _bounds.y + HEIGHT / 2);
+        gfx->drawString(_title, Layout::centerX(), _bounds.y + HEIGHT / 2);
     }
 
     // Right button (if set)

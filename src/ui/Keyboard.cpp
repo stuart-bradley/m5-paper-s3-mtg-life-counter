@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <cstring>
 #include "../utils/Sound.hpp"
+#include "Layout.hpp"
 
 // Keyboard layout - letter mode
 static const char* LETTER_ROW0 = "QWERTYUIOP";  // 10 keys + backspace
@@ -22,9 +23,9 @@ Keyboard::Keyboard(const char* initialText, Callback onComplete) : _onComplete(o
     _originalText[MAX_TEXT_LEN] = '\0';
     _cursorPos = strlen(_buffer);
 
-    // Size: full width, 270px height at bottom
-    // Calculation: 44px preview + 4 rows * (50px + 6px spacing) = 268px
-    _bounds = Rect(0, 270, 960, 270);
+    // Size: full width, half screen height at bottom
+    int16_t kbdH = Layout::screenH() / 2;
+    _bounds = Rect(0, Layout::screenH() - kbdH, Layout::screenW(), kbdH);
 }
 
 void Keyboard::appendChar(char c) {

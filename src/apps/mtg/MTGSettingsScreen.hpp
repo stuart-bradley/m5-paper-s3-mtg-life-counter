@@ -1,32 +1,28 @@
 #pragma once
 
-#include <Preferences.h>
-#include "../../models/GameState.hpp"
-#include "../Button.hpp"
-#include "../HeaderBar.hpp"
-#include "../Screen.hpp"
-#include "../Toolbar.hpp"
+#include "../../ui/Button.hpp"
+#include "../../ui/HeaderScreen.hpp"
 
-class ScreenManager;
+class MTGApp;
+class GameState;
 
-class MTGSettingsScreen : public Screen {
+class MTGSettingsScreen : public HeaderScreen {
    public:
-    MTGSettingsScreen(ScreenManager* manager);
+    explicit MTGSettingsScreen(MTGApp* app);
     ~MTGSettingsScreen();
 
-    ScreenId getScreenId() const override { return ScreenId::MTGSettings; }
+    const char* screenId() const override { return "settings"; }
 
     void onEnter() override;
     void onExit() override;
-    void update() override;
-    void draw(M5GFX* gfx) override;
-    bool handleTouch(int16_t x, int16_t y, bool pressed, bool released) override;
+
+   protected:
+    void onUpdate() override;
+    void onHeaderFullRedraw(M5GFX* gfx) override;
+    bool onTouch(int16_t x, int16_t y, bool pressed, bool released) override;
 
    private:
-    ScreenManager* _manager;
-    Toolbar _toolbar;
-    HeaderBar _headerBar;
-    GameState _gameState;
+    MTGApp* _app;
 
     // UI Buttons
     Button* _playerButtons[5] = {nullptr};  // 2,3,4,5,6 players
@@ -40,10 +36,8 @@ class MTGSettingsScreen : public Screen {
     Button* _confirmCancelButton = nullptr;
     Button* _confirmOkButton = nullptr;
 
-    bool _dirty = true;
+    GameState& gameState();  // Helper to access via App
 
-    void loadState();
-    void saveState();
     void createButtons();
     void destroyButtons();
     void updatePlayerButtonStates();

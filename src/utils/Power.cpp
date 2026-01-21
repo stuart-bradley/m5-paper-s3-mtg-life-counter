@@ -1,5 +1,6 @@
 #include "Power.hpp"
 #include <M5Unified.h>
+#include "Log.hpp"
 
 namespace Power {
 
@@ -12,10 +13,10 @@ void init() {
     // Check if IMU is available
     if (M5.Imu.isEnabled()) {
         imuInitialized = true;
-        Serial.println("Power: IMU enabled for motion detection");
+        LOG_I("Power: IMU enabled for motion detection");
     } else {
         imuInitialized = false;
-        Serial.println("Power: IMU not available, button wake only");
+        LOG_I("Power: IMU not available, button wake only");
     }
 }
 
@@ -35,11 +36,11 @@ bool shouldSleep(uint16_t timeoutSecs) {
 }
 
 void powerOff() {
-    Serial.println("Power: Entering power-off mode");
-    Serial.flush();
+    LOG_I("Power: Entering power-off mode");
 
-    // Small delay to ensure serial output completes
-    delay(100);
+    // Flush serial to ensure debug output completes before shutdown
+    Serial.flush();
+    delay(50);
 
     // Power off the device
     // Note: IMU wake may not work on M5Paper S3 (see issue v21)

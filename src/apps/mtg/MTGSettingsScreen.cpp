@@ -1,19 +1,21 @@
 #include "MTGSettingsScreen.hpp"
 #include <Arduino.h>
-#include "../../app/ScreenManager.hpp"
+#include <Preferences.h>
+#include "../../app/Navigation.hpp"
+#include "../../ui/Layout.hpp"
 #include "../../utils/Sound.hpp"
+#include "MTGApp.hpp"
 
 // Layout constants
-static constexpr int16_t SCREEN_W = 960;
-static constexpr int16_t HEADER_Y = Toolbar::HEIGHT;
-static constexpr int16_t HEADER_H = 44;
+static constexpr int16_t HEADER_Y = Layout::TOOLBAR_H;
+static constexpr int16_t HEADER_H = Layout::HEADER_H;
 static constexpr int16_t CONTENT_Y = HEADER_Y + HEADER_H + 12;
 static constexpr int16_t MARGIN = 16;
 // Two-column layout
 static constexpr int16_t LEFT_COL_X = MARGIN;
 static constexpr int16_t LEFT_COL_W = 460;
 static constexpr int16_t RIGHT_COL_X = LEFT_COL_X + LEFT_COL_W + MARGIN;
-static constexpr int16_t RIGHT_COL_W = SCREEN_W - RIGHT_COL_X - MARGIN;
+static constexpr int16_t RIGHT_COL_W = Layout::screenW() - RIGHT_COL_X - MARGIN;
 // Section dimensions
 static constexpr int16_t SECTION_H = 100;  // Extra padding at bottom
 static constexpr int16_t SECTION_GAP = 12;
@@ -23,34 +25,32 @@ static constexpr int16_t SELECT_BTN_W = 64;
 static constexpr int16_t SELECT_BTN_H = 50;
 static constexpr int16_t RESET_BTN_H = 70;
 
-MTGSettingsScreen::MTGSettingsScreen(ScreenManager* manager) : _manager(manager) {
-    _headerBar.setTitle("GAME SETTINGS");
-    _headerBar.setLeftButton("< BACK", [this]() { _manager->goBack(); });
-}
+MTGSettingsScreen::MTGSettingsScreen(MTGApp* app) : HeaderScreen("GAME SETTINGS"), _app(app) {}
 
 MTGSettingsScreen::~MTGSettingsScreen() {
     destroyButtons();
 }
 
+GameState& MTGSettingsScreen::gameState() {
+    return _app->gameState();
+}
+
 void MTGSettingsScreen::onEnter() {
-    loadState();
+    // State is shared via App, but reload from NVS to be safe
+    Preferences prefs;
+    gameState().load(prefs);
+
+    // Set up back button - pops back to the life screen
+    setLeftButton("< BACK", []() { Navigation::instance().popScreen(); });
+
     createButtons();
     setNeedsFullRedraw(true);
 }
 
 void MTGSettingsScreen::onExit() {
-    saveState();
+    Preferences prefs;
+    gameState().save(prefs);
     destroyButtons();
-}
-
-void MTGSettingsScreen::loadState() {
-    Preferences prefs;
-    _gameState.load(prefs);
-}
-
-void MTGSettingsScreen::saveState() {
-    Preferences prefs;
-    _gameState.save(prefs);
 }
 
 void MTGSettingsScreen::createButtons() {
@@ -149,7 +149,6 @@ void MTGSettingsScreen::destroyButtons() {
 }
 
 void MTGSettingsScreen::updatePlayerButtonStates() {
-    const uint8_t counts[] = {2, 3, 4, 5, 6};
     for (int i = 0; i < 5; i++) {
         if (_playerButtons[i]) {
             _playerButtons[i]->setDirty(true);
@@ -166,19 +165,21 @@ void MTGSettingsScreen::updateLifeButtonStates() {
 }
 
 void MTGSettingsScreen::onPlayerCountSelect(uint8_t count) {
-    if (_gameState.playerCount != count) {
-        _gameState.playerCount = count;
+    if (gameState().playerCount != count) {
+        gameState().playerCount = count;
         updatePlayerButtonStates();
-        saveState();
+        Preferences prefs;
+        gameState().save(prefs);
         setNeedsFullRedraw(true);
     }
 }
 
 void MTGSettingsScreen::onStartingLifeSelect(int16_t life) {
-    if (_gameState.startingLife != life) {
-        _gameState.startingLife = life;
+    if (gameState().startingLife != life) {
+        gameState().startingLife = life;
         updateLifeButtonStates();
-        saveState();
+        Preferences prefs;
+        gameState().save(prefs);
         setNeedsFullRedraw(true);
     }
 }
@@ -205,125 +206,104 @@ void MTGSettingsScreen::hideConfirmDialog() {
 void MTGSettingsScreen::onConfirmAction() {
     if (_confirmIsNewGame) {
         // Reset everything to defaults
-        _gameState.reset();
+        gameState().reset();
     } else {
         // Just reset life totals
-        _gameState.resetLifeTotals();
+        gameState().resetLifeTotals();
     }
-    saveState();
+    Preferences prefs;
+    gameState().save(prefs);
     hideConfirmDialog();
 }
 
-void MTGSettingsScreen::update() {
-    _toolbar.update();
+void MTGSettingsScreen::onUpdate() {
+    // Base class handles toolbar update
 }
 
-void MTGSettingsScreen::draw(M5GFX* gfx) {
-    bool needsDisplay = false;
+void MTGSettingsScreen::onHeaderFullRedraw(M5GFX* gfx) {
+    // Left column - Section 1: Players
+    drawSection(gfx, LEFT_COL_X, CONTENT_Y, LEFT_COL_W, SECTION_H, "PLAYERS");
 
-    if (needsFullRedraw()) {
-        gfx->fillScreen(TFT_WHITE);
-        setNeedsFullRedraw(false);
-
-        // Draw toolbar
-        _toolbar.setDirty(true);
-        _toolbar.draw(gfx);
-
-        // Draw header bar
-        _headerBar.draw(gfx);
-
-        // Left column - Section 1: Players
-        drawSection(gfx, LEFT_COL_X, CONTENT_Y, LEFT_COL_W, SECTION_H, "PLAYERS");
-
-        // Draw player count buttons
-        const uint8_t counts[] = {2, 3, 4, 5, 6};
-        for (int i = 0; i < 5; i++) {
-            if (_playerButtons[i]) {
-                Rect r = _playerButtons[i]->getBounds();
-                bool selected = (counts[i] == _gameState.playerCount);
-                if (selected) {
-                    gfx->fillRect(r.x, r.y, r.w, r.h, TFT_BLACK);
-                    gfx->setTextColor(TFT_WHITE);
-                } else {
-                    gfx->fillRect(r.x, r.y, r.w, r.h, TFT_WHITE);
-                    gfx->drawRect(r.x, r.y, r.w, r.h, TFT_BLACK);
-                    gfx->setTextColor(TFT_BLACK);
-                }
-                gfx->setTextDatum(MC_DATUM);
-                gfx->setTextSize(2);
-                char label[4];
-                snprintf(label, sizeof(label), "%d", counts[i]);
-                gfx->drawString(label, r.x + r.w / 2, r.y + r.h / 2);
+    // Draw player count buttons
+    const uint8_t counts[] = {2, 3, 4, 5, 6};
+    for (int i = 0; i < 5; i++) {
+        if (_playerButtons[i]) {
+            Rect r = _playerButtons[i]->getBounds();
+            bool selected = (counts[i] == gameState().playerCount);
+            if (selected) {
+                gfx->fillRect(r.x, r.y, r.w, r.h, TFT_BLACK);
+                gfx->setTextColor(TFT_WHITE);
+            } else {
+                gfx->fillRect(r.x, r.y, r.w, r.h, TFT_WHITE);
+                gfx->drawRect(r.x, r.y, r.w, r.h, TFT_BLACK);
+                gfx->setTextColor(TFT_BLACK);
             }
-        }
-
-        // Left column - Section 2: Starting Life
-        drawSection(gfx, LEFT_COL_X, CONTENT_Y + SECTION_H + SECTION_GAP, LEFT_COL_W, SECTION_H,
-                    "STARTING LIFE");
-
-        // Draw starting life buttons
-        const int16_t lifeTotals[] = {20, 25, 30, 40};
-        for (int i = 0; i < 4; i++) {
-            if (_lifeButtons[i]) {
-                Rect r = _lifeButtons[i]->getBounds();
-                bool selected = (lifeTotals[i] == _gameState.startingLife);
-                if (selected) {
-                    gfx->fillRect(r.x, r.y, r.w, r.h, TFT_BLACK);
-                    gfx->setTextColor(TFT_WHITE);
-                } else {
-                    gfx->fillRect(r.x, r.y, r.w, r.h, TFT_WHITE);
-                    gfx->drawRect(r.x, r.y, r.w, r.h, TFT_BLACK);
-                    gfx->setTextColor(TFT_BLACK);
-                }
-                gfx->setTextDatum(MC_DATUM);
-                gfx->setTextSize(2);
-                char label[4];
-                snprintf(label, sizeof(label), "%d", lifeTotals[i]);
-                gfx->drawString(label, r.x + r.w / 2, r.y + r.h / 2);
-            }
-        }
-
-        // Right column - Reset Options section
-        const int16_t resetSectionH = SECTION_H * 2 + SECTION_GAP;
-        drawSection(gfx, RIGHT_COL_X, CONTENT_Y, RIGHT_COL_W, resetSectionH, "RESET OPTIONS");
-
-        // Draw reset buttons
-        if (_resetLifeButton) {
-            Rect r = _resetLifeButton->getBounds();
-            gfx->fillRect(r.x, r.y, r.w, r.h, TFT_WHITE);
-            gfx->drawRect(r.x, r.y, r.w, r.h, TFT_BLACK);
-            gfx->setTextColor(TFT_BLACK);
-            gfx->setTextDatum(ML_DATUM);
+            gfx->setTextDatum(MC_DATUM);
             gfx->setTextSize(2);
-            gfx->drawString("Reset Life", r.x + 16, r.y + r.h / 2 - 12);
-            gfx->drawString("Reset to starting life", r.x + 16, r.y + r.h / 2 + 12);
+            char label[4];
+            snprintf(label, sizeof(label), "%d", counts[i]);
+            gfx->drawString(label, r.x + r.w / 2, r.y + r.h / 2);
         }
-
-        if (_newGameButton) {
-            Rect r = _newGameButton->getBounds();
-            gfx->fillRect(r.x, r.y, r.w, r.h, TFT_WHITE);
-            gfx->drawRect(r.x, r.y, r.w, r.h, TFT_BLACK);
-            gfx->drawRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4, TFT_BLACK);  // Double border
-            gfx->setTextColor(TFT_BLACK);
-            gfx->setTextDatum(ML_DATUM);
-            gfx->setTextSize(2);
-            gfx->drawString("New Game", r.x + 16, r.y + r.h / 2 - 12);
-            gfx->drawString("Reset everything", r.x + 16, r.y + r.h / 2 + 12);
-        }
-
-        // Draw confirm dialog if showing
-        if (_showingConfirm) {
-            drawConfirmDialog(gfx);
-        }
-
-        needsDisplay = true;
     }
 
-    if (needsDisplay) {
-        gfx->display();
+    // Left column - Section 2: Starting Life
+    drawSection(gfx, LEFT_COL_X, CONTENT_Y + SECTION_H + SECTION_GAP, LEFT_COL_W, SECTION_H,
+                "STARTING LIFE");
+
+    // Draw starting life buttons
+    const int16_t lifeTotals[] = {20, 25, 30, 40};
+    for (int i = 0; i < 4; i++) {
+        if (_lifeButtons[i]) {
+            Rect r = _lifeButtons[i]->getBounds();
+            bool selected = (lifeTotals[i] == gameState().startingLife);
+            if (selected) {
+                gfx->fillRect(r.x, r.y, r.w, r.h, TFT_BLACK);
+                gfx->setTextColor(TFT_WHITE);
+            } else {
+                gfx->fillRect(r.x, r.y, r.w, r.h, TFT_WHITE);
+                gfx->drawRect(r.x, r.y, r.w, r.h, TFT_BLACK);
+                gfx->setTextColor(TFT_BLACK);
+            }
+            gfx->setTextDatum(MC_DATUM);
+            gfx->setTextSize(2);
+            char label[4];
+            snprintf(label, sizeof(label), "%d", lifeTotals[i]);
+            gfx->drawString(label, r.x + r.w / 2, r.y + r.h / 2);
+        }
     }
 
-    _dirty = false;
+    // Right column - Reset Options section
+    const int16_t resetSectionH = SECTION_H * 2 + SECTION_GAP;
+    drawSection(gfx, RIGHT_COL_X, CONTENT_Y, RIGHT_COL_W, resetSectionH, "RESET OPTIONS");
+
+    // Draw reset buttons
+    if (_resetLifeButton) {
+        Rect r = _resetLifeButton->getBounds();
+        gfx->fillRect(r.x, r.y, r.w, r.h, TFT_WHITE);
+        gfx->drawRect(r.x, r.y, r.w, r.h, TFT_BLACK);
+        gfx->setTextColor(TFT_BLACK);
+        gfx->setTextDatum(ML_DATUM);
+        gfx->setTextSize(2);
+        gfx->drawString("Reset Life", r.x + 16, r.y + r.h / 2 - 12);
+        gfx->drawString("Reset to starting life", r.x + 16, r.y + r.h / 2 + 12);
+    }
+
+    if (_newGameButton) {
+        Rect r = _newGameButton->getBounds();
+        gfx->fillRect(r.x, r.y, r.w, r.h, TFT_WHITE);
+        gfx->drawRect(r.x, r.y, r.w, r.h, TFT_BLACK);
+        gfx->drawRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4, TFT_BLACK);  // Double border
+        gfx->setTextColor(TFT_BLACK);
+        gfx->setTextDatum(ML_DATUM);
+        gfx->setTextSize(2);
+        gfx->drawString("New Game", r.x + 16, r.y + r.h / 2 - 12);
+        gfx->drawString("Reset everything", r.x + 16, r.y + r.h / 2 + 12);
+    }
+
+    // Draw confirm dialog if showing
+    if (_showingConfirm) {
+        drawConfirmDialog(gfx);
+    }
 }
 
 void MTGSettingsScreen::drawSection(M5GFX* gfx, int16_t x, int16_t y, int16_t w, int16_t h,
@@ -387,7 +367,7 @@ void MTGSettingsScreen::drawConfirmDialog(M5GFX* gfx) {
     gfx->drawString("Confirm", okR.x + okR.w / 2, okR.y + okR.h / 2);
 }
 
-bool MTGSettingsScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool released) {
+bool MTGSettingsScreen::onTouch(int16_t x, int16_t y, bool pressed, bool released) {
     // Confirm dialog takes priority
     if (_showingConfirm) {
         if (_confirmCancelButton && _confirmCancelButton->handleTouch(x, y, pressed, released)) {
@@ -398,11 +378,6 @@ bool MTGSettingsScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool rel
         }
         // Block other touches when dialog is showing
         return pressed || released;
-    }
-
-    // Header bar (back button)
-    if (_headerBar.handleTouch(x, y, pressed, released)) {
-        return true;
     }
 
     // Player count buttons

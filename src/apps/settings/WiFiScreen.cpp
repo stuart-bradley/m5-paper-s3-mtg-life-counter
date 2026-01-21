@@ -1,25 +1,17 @@
 #include "WiFiScreen.hpp"
 #include <M5Unified.h>
 #include <Preferences.h>
-#include "../../app/ScreenManager.hpp"
+#include <algorithm>
+#include "../../app/Navigation.hpp"
+#include "../../utils/Log.hpp"
 #include "../../utils/Sound.hpp"
+#include "SettingsApp.hpp"
 
 static constexpr const char* WIFI_PREF_NS = "wifi";
 static constexpr const char* PREF_SSID = "ssid";
 static constexpr const char* PREF_PASS = "pass";
 
-WiFiScreen::WiFiScreen(ScreenManager* manager) : _manager(manager) {
-    _headerBar.setTitle("SELECT WIFI NETWORK");
-}
-
-void WiFiScreen::setSettingsScreen(Screen* screen) {
-    _settingsScreen = screen;
-    _headerBar.setLeftButton("< BACK", [this]() {
-        if (_settingsScreen) {
-            _manager->setScreen(_settingsScreen);
-        }
-    });
-}
+WiFiScreen::WiFiScreen(SettingsApp* app) : HeaderScreen("SELECT WIFI NETWORK"), _app(app) {}
 
 void WiFiScreen::onEnter() {
     _networks.clear();
@@ -32,8 +24,10 @@ void WiFiScreen::onEnter() {
         _keyboard = nullptr;
     }
 
+    // Set up navigation buttons - pop back to system settings
+    setLeftButton("< BACK", []() { Navigation::instance().popScreen(); });
+
     // Set up scan button (always available when not connected)
-    // Disconnect button will replace it when connected
     updateDisconnectButton();
 
     setNeedsFullRedraw(true);
@@ -49,11 +43,11 @@ void WiFiScreen::onExit() {
 
 void WiFiScreen::startScan(bool showSplash) {
     if (_scanning || _connecting) {
-        Serial.println("[WiFi] Scan skipped - already busy");
+        LOG_D("[WiFi] Scan skipped - already busy");
         return;
     }
 
-    Serial.println("[WiFi] Starting scan...");
+    LOG_D("[WiFi] Starting scan...");
     _scanning = true;
     _lastScanTime = millis();
 
@@ -73,19 +67,19 @@ void WiFiScreen::startScan(bool showSplash) {
 
     // Use synchronous scan for reliability
     int16_t result = WiFi.scanNetworks(false, true);  // sync, show hidden
-    Serial.printf("[WiFi] Scan complete, found %d networks\n", result);
+    LOG_D("[WiFi] Scan complete, found %d networks", result);
 
     _scanning = false;
     _networks.clear();
 
     if (result < 0) {
-        Serial.printf("[WiFi] Scan failed with error: %d\n", result);
+        LOG_D("[WiFi] Scan failed with error: %d", result);
         setNeedsFullRedraw(true);
         return;
     }
 
     String currentSSID = WiFi.SSID();
-    Serial.printf("[WiFi] Currently connected to: '%s'\n", currentSSID.c_str());
+    LOG_D("[WiFi] Currently connected to: '%s'", currentSSID.c_str());
 
     for (int i = 0; i < result; i++) {
         WiFiNetwork net;
@@ -94,8 +88,8 @@ void WiFiScreen::startScan(bool showSplash) {
         net.secured = (WiFi.encryptionType(i) != WIFI_AUTH_OPEN);
         net.connected = (net.ssid == currentSSID && WiFi.status() == WL_CONNECTED);
 
-        Serial.printf("[WiFi]   %d: '%s' (%d dBm) %s %s\n", i, net.ssid.c_str(), net.rssi,
-                      net.secured ? "[secured]" : "[open]", net.connected ? "[connected]" : "");
+        LOG_D("[WiFi]   %d: '%s' (%d dBm) %s %s", i, net.ssid.c_str(), net.rssi,
+              net.secured ? "[secured]" : "[open]", net.connected ? "[connected]" : "");
 
         // Skip empty SSIDs
         if (net.ssid.length() > 0) {
@@ -113,7 +107,7 @@ void WiFiScreen::startScan(bool showSplash) {
     WiFi.scanDelete();
     updateDisconnectButton();
     setNeedsFullRedraw(true);
-    Serial.printf("[WiFi] Final network count: %d\n", (int)_networks.size());
+    LOG_D("[WiFi] Final network count: %d", (int)_networks.size());
 }
 
 void WiFiScreen::updateScanResults() {
@@ -126,8 +120,8 @@ void WiFiScreen::drawScanningSplash() {
     // Modal dimensions
     int16_t boxW = 400;
     int16_t boxH = 100;
-    int16_t boxX = (960 - boxW) / 2;
-    int16_t boxY = (540 - boxH) / 2;
+    int16_t boxX = (Layout::screenW() - boxW) / 2;
+    int16_t boxY = (Layout::screenH() - boxH) / 2;
 
     // Draw modal box with double border
     gfx->fillRect(boxX, boxY, boxW, boxH, TFT_WHITE);
@@ -149,8 +143,8 @@ void WiFiScreen::drawConnectingSplash(const String& ssid) {
     // Modal dimensions
     int16_t boxW = 400;
     int16_t boxH = 120;
-    int16_t boxX = (960 - boxW) / 2;
-    int16_t boxY = (540 - boxH) / 2;
+    int16_t boxX = (Layout::screenW() - boxW) / 2;
+    int16_t boxY = (Layout::screenH() - boxH) / 2;
 
     // Draw modal box with double border
     gfx->fillRect(boxX, boxY, boxW, boxH, TFT_WHITE);
@@ -206,7 +200,7 @@ void WiFiScreen::connectToNetwork(const String& ssid, const String& password) {
 }
 
 void WiFiScreen::disconnectFromNetwork() {
-    Serial.println("[WiFi] Disconnecting...");
+    LOG_I("[WiFi] Disconnecting...");
     WiFi.disconnect(true);  // true = also erase stored credentials
 
     // Clear saved credentials
@@ -228,30 +222,28 @@ void WiFiScreen::disconnectFromNetwork() {
 void WiFiScreen::updateDisconnectButton() {
     // Always show SCAN button - user can rescan anytime
     // Tapping connected network will disconnect
-    _headerBar.setRightButton("SCAN", [this]() {
+    setRightButton("SCAN", [this]() {
         Sound::click();
         startScan();
     });
 }
 
-void WiFiScreen::update() {
+void WiFiScreen::onUpdate() {
     if (_scanning) {
         updateScanResults();
     }
 }
 
-void WiFiScreen::draw(M5GFX* gfx) {
-    bool needsDisplay = false;
-
-    if (needsFullRedraw()) {
-        gfx->fillScreen(TFT_WHITE);
-        setNeedsFullRedraw(false);
-        _toolbar.setDirty(true);
-        needsDisplay = true;
-
-        _headerBar.draw(gfx);
-        drawNetworkList(gfx);
+void WiFiScreen::onHeaderFullRedraw(M5GFX* gfx) {
+    drawNetworkList(gfx);
+    if (_keyboard) {
+        _keyboard->setDirty(true);
+        _keyboard->draw(gfx);
     }
+}
+
+bool WiFiScreen::onDraw(M5GFX* gfx) {
+    bool needsDisplay = false;
 
     // Draw keyboard overlay if active
     if (_keyboard && _keyboard->isDirty()) {
@@ -259,15 +251,7 @@ void WiFiScreen::draw(M5GFX* gfx) {
         needsDisplay = true;
     }
 
-    _toolbar.update();
-    if (_toolbar.isDirty()) {
-        _toolbar.draw(gfx);
-        needsDisplay = true;
-    }
-
-    if (needsDisplay) {
-        gfx->display();
-    }
+    return needsDisplay;
 }
 
 void WiFiScreen::drawNetworkList(M5GFX* gfx) {
@@ -279,15 +263,15 @@ void WiFiScreen::drawNetworkList(M5GFX* gfx) {
     gfx->setTextSize(1);
 
     if (_scanning) {
-        gfx->drawString("-- Scanning for networks... --", 480, y - 25);
+        gfx->drawString("-- Scanning for networks... --", Layout::centerX(), y - 25);
     } else if (_connecting) {
-        gfx->drawString("-- Connecting... --", 480, y - 25);
+        gfx->drawString("-- Connecting... --", Layout::centerX(), y - 25);
     } else if (_networks.empty()) {
-        gfx->drawString("-- No networks found --", 480, y - 25);
+        gfx->drawString("-- No networks found --", Layout::centerX(), y - 25);
     } else {
         char header[40];
         snprintf(header, sizeof(header), "-- Available Networks (%d) --", (int)_networks.size());
-        gfx->drawString(header, 480, y - 25);
+        gfx->drawString(header, Layout::centerX(), y - 25);
     }
 
     // Draw visible networks
@@ -300,7 +284,7 @@ void WiFiScreen::drawNetworkList(M5GFX* gfx) {
 
 void WiFiScreen::drawNetwork(M5GFX* gfx, int16_t y, const WiFiNetwork& network, bool selected) {
     int16_t x = ROW_PADDING;
-    int16_t w = 960 - ROW_PADDING * 2;
+    int16_t w = Layout::screenW() - ROW_PADDING * 2;
     int16_t h = ROW_HEIGHT - 4;
 
     // Background
@@ -335,7 +319,6 @@ void WiFiScreen::drawNetwork(M5GFX* gfx, int16_t y, const WiFiNetwork& network, 
 
 const char* WiFiScreen::getSignalBars(int32_t rssi) {
     // RSSI typically ranges from -100 (weak) to -30 (strong)
-    // Using ASCII bars: _ for low, = for medium, # for high
     if (rssi >= -50)
         return "####";  // Excellent
     if (rssi >= -60)
@@ -353,7 +336,7 @@ Rect WiFiScreen::getNetworkRect(int index) const {
         return Rect(0, 0, 0, 0);  // Off-screen
     }
     int16_t y = LIST_START_Y + visibleIndex * ROW_HEIGHT;
-    return Rect(ROW_PADDING, y, 960 - ROW_PADDING * 2, ROW_HEIGHT - 4);
+    return Rect(ROW_PADDING, y, Layout::screenW() - ROW_PADDING * 2, ROW_HEIGHT - 4);
 }
 
 void WiFiScreen::onKeyboardComplete(const char* password, bool confirmed) {
@@ -369,7 +352,7 @@ void WiFiScreen::onKeyboardComplete(const char* password, bool confirmed) {
     setNeedsFullRedraw(true);
 }
 
-bool WiFiScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool released) {
+bool WiFiScreen::onTouch(int16_t x, int16_t y, bool pressed, bool released) {
     // Keyboard takes priority
     if (_keyboard) {
         if (_keyboard->handleTouch(x, y, pressed, released)) {
@@ -381,11 +364,6 @@ bool WiFiScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool released) 
             return true;
         }
         return pressed;
-    }
-
-    // Header bar handles back button
-    if (_headerBar.handleTouch(x, y, pressed, released)) {
-        return true;
     }
 
     if (!released)

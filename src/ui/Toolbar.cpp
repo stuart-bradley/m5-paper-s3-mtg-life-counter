@@ -1,8 +1,9 @@
 #include "Toolbar.hpp"
 #include <M5Unified.h>
 #include <WiFi.h>
+#include "Layout.hpp"
 
-Toolbar::Toolbar() : Component(Rect(0, 0, 960, HEIGHT)) {}
+Toolbar::Toolbar() : Component(Rect(0, 0, Layout::screenW(), HEIGHT)) {}
 
 void Toolbar::update() {
     int8_t newBattery = M5.Power.getBatteryLevel();

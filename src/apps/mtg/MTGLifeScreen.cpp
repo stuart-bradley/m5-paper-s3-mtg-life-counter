@@ -1,38 +1,38 @@
 #include "MTGLifeScreen.hpp"
 #include <Arduino.h>
-#include "../../app/ScreenManager.hpp"
+#include <Preferences.h>
+#include "../../app/Navigation.hpp"
+#include "../../ui/Layout.hpp"
 #include "../../utils/Sound.hpp"
+#include "MTGApp.hpp"
 
-MTGLifeScreen::MTGLifeScreen(ScreenManager* manager) : _manager(manager) {
-    _headerBar.setTitle("LIFE COUNTER");
+MTGLifeScreen::MTGLifeScreen(MTGApp* app) : HeaderScreen("LIFE COUNTER"), _app(app) {
+    // Navigation buttons will be set up in onEnter when we know app is fully constructed
 }
 
-void MTGLifeScreen::setSettingsScreen(Screen* screen) {
-    _settingsScreen = screen;
-    _headerBar.setRightButton("SETTINGS", [this]() {
-        if (_settingsScreen) {
-            _manager->setScreen(_settingsScreen);
-        }
-    });
-}
-
-void MTGLifeScreen::setHomeScreen(Screen* screen) {
-    _homeScreen = screen;
-    _headerBar.setLeftButton("< HOME", [this]() {
-        if (_homeScreen) {
-            _manager->setScreen(_homeScreen);
-        }
-    });
+GameState& MTGLifeScreen::gameState() {
+    return _app->gameState();
 }
 
 void MTGLifeScreen::onEnter() {
-    loadState();
+    // Load state from NVS
+    Preferences prefs;
+    gameState().load(prefs);
+
+    // Set up navigation buttons
+    setLeftButton("< HOME", []() { Navigation::instance().goHome(); });
+    setRightButton("SETTINGS",
+                   [this]() { Navigation::instance().pushScreen(_app->settingsScreen()); });
+
     createPlayerCards();
     setNeedsFullRedraw(true);
 }
 
 void MTGLifeScreen::onExit() {
-    saveState();
+    // Save state to NVS
+    Preferences prefs;
+    gameState().save(prefs);
+
     destroyPlayerCards();
     if (_keyboard) {
         delete _keyboard;
@@ -40,29 +40,19 @@ void MTGLifeScreen::onExit() {
     }
 }
 
-void MTGLifeScreen::loadState() {
-    Preferences prefs;
-    _gameState.load(prefs);
-}
-
-void MTGLifeScreen::saveState() {
-    Preferences prefs;
-    _gameState.save(prefs);
-}
-
 void MTGLifeScreen::createPlayerCards() {
     destroyPlayerCards();
 
-    for (int i = 0; i < _gameState.playerCount; i++) {
+    for (int i = 0; i < gameState().playerCount; i++) {
         int idx = i;  // Capture for lambda
         _playerCards[i] =
-            new PlayerCard(&_gameState.players[i], [this, idx]() { showKeyboard(idx); });
+            new PlayerCard(&gameState().players[i], [this, idx]() { showKeyboard(idx); });
     }
     layoutPlayerCards();
 }
 
 void MTGLifeScreen::destroyPlayerCards() {
-    for (int i = 0; i < GameState::MAX_PLAYERS; i++) {
+    for (int i = 0; i < 6; i++) {
         if (_playerCards[i]) {
             delete _playerCards[i];
             _playerCards[i] = nullptr;
@@ -71,18 +61,18 @@ void MTGLifeScreen::destroyPlayerCards() {
 }
 
 void MTGLifeScreen::layoutPlayerCards() {
-    for (int i = 0; i < _gameState.playerCount; i++) {
+    for (int i = 0; i < gameState().playerCount; i++) {
         if (_playerCards[i]) {
-            Rect r = getPlayerCardRect(i, _gameState.playerCount);
+            Rect r = getPlayerCardRect(i, gameState().playerCount);
             _playerCards[i]->setBounds(r);
         }
     }
 }
 
 Rect MTGLifeScreen::getPlayerCardRect(int index, int playerCount) const {
-    int16_t startY = Toolbar::HEIGHT + HeaderBar::HEIGHT + 4;
-    int16_t availableH = 540 - startY - 4;
-    int16_t availableW = 960 - 8;
+    int16_t startY = Layout::headerContentY() + Layout::MARGIN_S;
+    int16_t availableH = Layout::headerContentH() - Layout::MARGIN_S * 2;
+    int16_t availableW = Layout::screenW() - Layout::MARGIN_M;
 
     switch (playerCount) {
         case 2: {
@@ -137,49 +127,35 @@ Rect MTGLifeScreen::getPlayerCardRect(int index, int playerCount) const {
     }
 }
 
-void MTGLifeScreen::update() {
-    _toolbar.update();
-
+void MTGLifeScreen::onUpdate() {
     // Auto-save periodically
     uint32_t now = millis();
     if (now - _lastSaveTime > SAVE_INTERVAL_MS) {
-        saveState();
+        Preferences prefs;
+        gameState().save(prefs);
         _lastSaveTime = now;
     }
 }
 
-void MTGLifeScreen::draw(M5GFX* gfx) {
+void MTGLifeScreen::onHeaderFullRedraw(M5GFX* gfx) {
+    // Mark all components dirty after full redraw
+    for (int i = 0; i < gameState().playerCount; i++) {
+        if (_playerCards[i]) {
+            _playerCards[i]->setDirty(true);
+            _playerCards[i]->draw(gfx);
+        }
+    }
+    if (_keyboard) {
+        _keyboard->setDirty(true);
+        _keyboard->draw(gfx);
+    }
+}
+
+bool MTGLifeScreen::onDraw(M5GFX* gfx) {
     bool needsDisplay = false;
 
-    if (needsFullRedraw()) {
-        gfx->fillScreen(TFT_WHITE);
-        setNeedsFullRedraw(false);
-        // Mark all components dirty after full redraw
-        _toolbar.setDirty(true);
-        for (int i = 0; i < _gameState.playerCount; i++) {
-            if (_playerCards[i]) {
-                _playerCards[i]->setDirty(true);
-            }
-        }
-        if (_keyboard) {
-            _keyboard->setDirty(true);
-        }
-        needsDisplay = true;
-    }
-
-    // Draw toolbar (only if dirty)
-    if (_toolbar.isDirty()) {
-        _toolbar.draw(gfx);
-        needsDisplay = true;
-    }
-
-    // Draw header bar (always after full redraw)
-    if (needsDisplay) {
-        _headerBar.draw(gfx);
-    }
-
     // Draw player cards (only if dirty)
-    for (int i = 0; i < _gameState.playerCount; i++) {
+    for (int i = 0; i < gameState().playerCount; i++) {
         if (_playerCards[i] && _playerCards[i]->isDirty()) {
             _playerCards[i]->draw(gfx);
             needsDisplay = true;
@@ -192,29 +168,18 @@ void MTGLifeScreen::draw(M5GFX* gfx) {
         needsDisplay = true;
     }
 
-    // Only trigger display refresh when something actually changed
-    if (needsDisplay) {
-        gfx->display();
-    }
-
-    _dirty = false;
+    return needsDisplay;
 }
 
-bool MTGLifeScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool released) {
+bool MTGLifeScreen::onTouch(int16_t x, int16_t y, bool pressed, bool released) {
     // Keyboard has priority when visible
     if (_keyboard) {
         return _keyboard->handleTouch(x, y, pressed, released);
     }
 
-    // Check header buttons
-    if (_headerBar.handleTouch(x, y, pressed, released)) {
-        return true;
-    }
-
     // Check player cards
-    for (int i = 0; i < _gameState.playerCount; i++) {
+    for (int i = 0; i < gameState().playerCount; i++) {
         if (_playerCards[i] && _playerCards[i]->handleTouch(x, y, pressed, released)) {
-            _dirty = true;
             return true;
         }
     }
@@ -227,18 +192,19 @@ void MTGLifeScreen::showKeyboard(int playerIndex) {
         delete _keyboard;
     }
     _editingPlayerIndex = playerIndex;
-    _keyboard = new Keyboard(_gameState.players[playerIndex].name,
+    _keyboard = new Keyboard(gameState().players[playerIndex].name,
                              [this](const char* result, bool confirmed) {
                                  // Save index before hideKeyboard clears it
                                  int idx = _editingPlayerIndex;
                                  hideKeyboard(confirmed);
                                  if (confirmed && idx >= 0) {
-                                     _gameState.players[idx].setName(result);
+                                     gameState().players[idx].setName(result);
                                      // Mark player card dirty to show updated name
                                      if (_playerCards[idx]) {
                                          _playerCards[idx]->setDirty(true);
                                      }
-                                     saveState();
+                                     Preferences prefs;
+                                     gameState().save(prefs);
                                  }
                              });
     setNeedsFullRedraw(true);

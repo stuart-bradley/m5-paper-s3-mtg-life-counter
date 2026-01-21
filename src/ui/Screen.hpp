@@ -2,20 +2,12 @@
 
 #include <M5GFX.h>
 
-enum class ScreenId : uint8_t {
-    Home = 0,
-    MTGLife = 1,
-    MTGSettings = 2,
-    SystemSettings = 3,
-    WiFi = 4,
-};
-
 class Screen {
    public:
     virtual ~Screen() = default;
 
-    // Identification
-    virtual ScreenId getScreenId() const = 0;
+    // Screen identification for save/restore
+    virtual const char* screenId() const { return "main"; }
 
     // Lifecycle
     virtual void onEnter() {}
