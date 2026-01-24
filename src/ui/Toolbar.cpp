@@ -6,7 +6,41 @@
 Toolbar::Toolbar() : Component(Rect(0, 0, Layout::screenW(), HEIGHT)) {}
 
 void Toolbar::update() {
-    int8_t newBattery = M5.Power.getBatteryLevel();
+    int8_t rawBattery = M5.Power.getBatteryLevel();
+
+    // Apply moving average to smooth battery readings
+    int8_t smoothedBattery = _batteryLevel;
+    if (rawBattery >= 0) {
+        _batterySamples[_batterySampleIndex] = rawBattery;
+        _batterySampleIndex = (_batterySampleIndex + 1) % BATTERY_SAMPLE_COUNT;
+
+        if (!_batterySamplesInitialized) {
+            // Fill all samples with first reading
+            for (int i = 0; i < BATTERY_SAMPLE_COUNT; i++) {
+                _batterySamples[i] = rawBattery;
+            }
+            _batterySamplesInitialized = true;
+            smoothedBattery = rawBattery;
+        } else {
+            // Calculate average
+            int32_t sum = 0;
+            for (int i = 0; i < BATTERY_SAMPLE_COUNT; i++) {
+                sum += _batterySamples[i];
+            }
+            smoothedBattery = (sum + BATTERY_SAMPLE_COUNT / 2) / BATTERY_SAMPLE_COUNT;
+        }
+    }
+
+    // Apply hysteresis - only update if change exceeds threshold
+    bool batteryChanged = false;
+    if (_batteryLevel < 0 && smoothedBattery >= 0) {
+        batteryChanged = true;  // First valid reading
+    } else if (smoothedBattery >= 0) {
+        int diff = smoothedBattery - _batteryLevel;
+        if (diff < 0)
+            diff = -diff;
+        batteryChanged = (diff >= BATTERY_HYSTERESIS);
+    }
 
     auto dt = M5.Rtc.getDateTime();
     uint8_t newHour = dt.time.hours;
@@ -29,9 +63,11 @@ void Toolbar::update() {
             newWifiStrength = 1;  // Very weak but connected
     }
 
-    if (newBattery != _batteryLevel || newHour != _hour || newMinute != _minute ||
+    if (batteryChanged || newHour != _hour || newMinute != _minute ||
         newWifiConnected != _wifiConnected || newWifiStrength != _wifiStrength) {
-        _batteryLevel = newBattery;
+        if (batteryChanged) {
+            _batteryLevel = smoothedBattery;
+        }
         _hour = newHour;
         _minute = newMinute;
         _wifiConnected = newWifiConnected;
