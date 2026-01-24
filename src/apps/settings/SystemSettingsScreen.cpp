@@ -5,8 +5,8 @@
 #include "../../utils/Sound.hpp"
 #include "SettingsApp.hpp"
 
-static const char* SOUND_OPTIONS[] = {"OFF", "ON"};
-static const char* SLEEP_OPTIONS[] = {"Off", "1m", "5m", "10m"};
+static const char* BOOL_OPTIONS[] = {"OFF", "ON"};
+static const char* SLEEP_OPTIONS[] = {"OFF", "1m", "5m", "10m"};
 static const uint16_t SLEEP_VALUES[] = {0, 60, 300, 600};
 
 SystemSettingsScreen::SystemSettingsScreen(SettingsApp* app)
@@ -14,6 +14,11 @@ SystemSettingsScreen::SystemSettingsScreen(SettingsApp* app)
 
 Settings& SystemSettingsScreen::settings() {
     return _app->settings();
+}
+
+void SystemSettingsScreen::saveSettings() {
+    Preferences prefs;
+    settings().save(prefs);
 }
 
 void SystemSettingsScreen::onEnter() {
@@ -46,23 +51,20 @@ int SystemSettingsScreen::getSleepIndex() const {
     return 2;  // Default to 5m if not found
 }
 
+int SystemSettingsScreen::getAutoConnectIndex() const {
+    return _app->settings().wifiAutoConnect ? 1 : 0;
+}
+
 Rect SystemSettingsScreen::getButtonRect(int row, int buttonIndex) const {
     int16_t y = Toolbar::HEIGHT + HeaderBar::HEIGHT + 40 + row * ROW_HEIGHT;
     int16_t x = BUTTONS_X + buttonIndex * (BUTTON_W + 10);
     return Rect(x, y, BUTTON_W, BUTTON_H);
 }
 
-void SystemSettingsScreen::drawRow(M5GFX* gfx, int16_t y, const char* label, const char* options[],
-                                   int optionCount, int selectedIndex) {
-    // Draw label
-    gfx->setTextColor(TFT_BLACK);
-    gfx->setTextDatum(ML_DATUM);
-    gfx->setTextSize(2);
-    gfx->drawString(label, LABEL_X, y + BUTTON_H / 2);
-
-    // Draw option buttons
+void SystemSettingsScreen::drawButtons(M5GFX* gfx, int16_t x, int16_t y, const char* options[],
+                                       int optionCount, int selectedIndex) {
     for (int i = 0; i < optionCount; i++) {
-        int16_t bx = BUTTONS_X + i * (BUTTON_W + 10);
+        int16_t bx = x + i * (BUTTON_W + 10);
         bool selected = (i == selectedIndex);
 
         if (selected) {
@@ -80,11 +82,21 @@ void SystemSettingsScreen::drawRow(M5GFX* gfx, int16_t y, const char* label, con
     }
 }
 
+void SystemSettingsScreen::drawRow(M5GFX* gfx, int16_t y, const char* label, const char* options[],
+                                   int optionCount, int selectedIndex) {
+    gfx->setTextColor(TFT_BLACK);
+    gfx->setTextDatum(ML_DATUM);
+    gfx->setTextSize(2);
+    gfx->drawString(label, LABEL_X, y + BUTTON_H / 2);
+
+    drawButtons(gfx, BUTTONS_X, y, options, optionCount, selectedIndex);
+}
+
 void SystemSettingsScreen::onHeaderFullRedraw(M5GFX* gfx) {
     // Draw setting rows
     int16_t startY = Layout::headerContentY() + 40;
 
-    // Row 0: WiFi (navigation row)
+    // Row 0: WiFi (navigation row + auto-connect toggle)
     gfx->setTextColor(TFT_BLACK);
     gfx->setTextDatum(ML_DATUM);
     gfx->setTextSize(2);
@@ -97,8 +109,15 @@ void SystemSettingsScreen::onHeaderFullRedraw(M5GFX* gfx) {
     gfx->setTextSize(1);
     gfx->drawString("Configure >", wifiButtonX + WIFI_BUTTON_W / 2, startY + BUTTON_H / 2);
 
+    // Auto-connect label and buttons
+    gfx->setTextColor(TFT_BLACK);
+    gfx->setTextDatum(ML_DATUM);
+    gfx->setTextSize(2);
+    gfx->drawString("Auto:", AUTO_LABEL_X, startY + BUTTON_H / 2);
+    drawButtons(gfx, AUTO_BUTTONS_X, startY, BOOL_OPTIONS, 2, getAutoConnectIndex());
+
     // Row 1: Sound
-    drawRow(gfx, startY + ROW_HEIGHT, "Sound:", SOUND_OPTIONS, 2, getSoundIndex());
+    drawRow(gfx, startY + ROW_HEIGHT, "Sound:", BOOL_OPTIONS, 2, getSoundIndex());
 
     // Row 2: Auto-Sleep
     drawRow(gfx, startY + ROW_HEIGHT * 2, "Auto-Sleep:", SLEEP_OPTIONS, 4, getSleepIndex());
@@ -117,6 +136,21 @@ bool SystemSettingsScreen::onTouch(int16_t x, int16_t y, bool pressed, bool rele
         return true;
     }
 
+    // Check auto-connect buttons (row 0)
+    for (int i = 0; i < 2; i++) {
+        Rect r(AUTO_BUTTONS_X + i * (BUTTON_W + 10), startY, BUTTON_W, BUTTON_H);
+        if (r.contains(x, y)) {
+            bool newValue = (i == 1);
+            if (settings().wifiAutoConnect != newValue) {
+                settings().wifiAutoConnect = newValue;
+                saveSettings();
+                Sound::click();
+                setNeedsFullRedraw(true);
+            }
+            return true;
+        }
+    }
+
     // Check sound buttons (row 1)
     for (int i = 0; i < 2; i++) {
         Rect r = getButtonRect(1, i);
@@ -125,6 +159,7 @@ bool SystemSettingsScreen::onTouch(int16_t x, int16_t y, bool pressed, bool rele
             if (settings().soundEnabled != newValue) {
                 settings().soundEnabled = newValue;
                 Sound::setEnabled(newValue);
+                saveSettings();
                 Sound::click();
                 setNeedsFullRedraw(true);
             }
@@ -138,6 +173,7 @@ bool SystemSettingsScreen::onTouch(int16_t x, int16_t y, bool pressed, bool rele
         if (r.contains(x, y)) {
             if (settings().sleepTimeoutSecs != SLEEP_VALUES[i]) {
                 settings().sleepTimeoutSecs = SLEEP_VALUES[i];
+                saveSettings();
                 Sound::click();
                 setNeedsFullRedraw(true);
             }

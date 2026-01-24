@@ -1,5 +1,6 @@
 #include <M5Unified.h>
 #include <Preferences.h>
+#include <WiFi.h>
 #include "app/AppRegistry.hpp"
 #include "app/Navigation.hpp"
 #include "apps/home/HomeApp.hpp"
@@ -17,6 +18,39 @@ Settings globalSettings;
 static HomeApp homeApp;
 static MTGApp mtgApp;
 static SettingsApp settingsApp;
+
+void tryWifiAutoConnect() {
+    Preferences prefs;
+    if (!prefs.begin("wifi", true))
+        return;  // read-only
+
+    String ssid = prefs.getString("ssid", "");
+    String pass = prefs.getString("pass", "");
+    prefs.end();
+
+    if (ssid.isEmpty()) {
+        LOG_I("WiFi auto-connect: no saved network");
+        return;
+    }
+
+    LOG_I("WiFi auto-connect: connecting to %s", ssid.c_str());
+
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid.c_str(), pass.c_str());
+
+    // Wait up to 5 seconds for connection
+    unsigned long start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 5000) {
+        delay(100);
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+        LOG_I("WiFi auto-connect: success, IP=%s", WiFi.localIP().toString().c_str());
+    } else {
+        LOG_W("WiFi auto-connect: failed (timeout)");
+        WiFi.disconnect();
+    }
+}
 
 void setup() {
     auto cfg = M5.config();
@@ -38,6 +72,11 @@ void setup() {
     LOG_I("M5Paper S3 App Platform");
     LOG_I("========================================");
     LOG_I("Sleep timeout: %d seconds", globalSettings.sleepTimeoutSecs);
+
+    // Auto-connect to WiFi if enabled
+    if (globalSettings.wifiAutoConnect) {
+        tryWifiAutoConnect();
+    }
 
     // Register apps with the registry
     auto& registry = AppRegistry::instance();

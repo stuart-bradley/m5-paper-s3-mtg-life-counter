@@ -8,6 +8,7 @@ struct Settings {
 
     bool soundEnabled = true;
     uint16_t sleepTimeoutSecs = DEFAULT_SLEEP_TIMEOUT;  // 0 = disabled
+    bool wifiAutoConnect = false;
 
     void initDefaults();
     bool load(Preferences& prefs);

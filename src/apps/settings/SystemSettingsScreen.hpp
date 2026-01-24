@@ -23,14 +23,20 @@ class SystemSettingsScreen : public HeaderScreen {
     static constexpr int16_t LABEL_X = 60;
     static constexpr int16_t BUTTONS_X = 300;
     static constexpr int16_t WIFI_BUTTON_W = 200;
+    static constexpr int16_t AUTO_LABEL_X = 520;
+    static constexpr int16_t AUTO_BUTTONS_X = 620;
 
     SettingsApp* _app;
 
     Settings& settings();  // Helper to access via App
+    void saveSettings();   // Save settings to NVS immediately
 
+    void drawButtons(M5GFX* gfx, int16_t x, int16_t y, const char* options[], int optionCount,
+                     int selectedIndex);
     void drawRow(M5GFX* gfx, int16_t y, const char* label, const char* options[], int optionCount,
                  int selectedIndex);
     int getSoundIndex() const;
     int getSleepIndex() const;
+    int getAutoConnectIndex() const;
     Rect getButtonRect(int row, int buttonIndex) const;
 };
