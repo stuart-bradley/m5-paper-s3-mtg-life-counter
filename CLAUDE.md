@@ -3,17 +3,6 @@
 ## Project Overview
 An app platform for the M5Paper S3 e-ink device featuring a home screen launcher, system settings, and a Magic: The Gathering life counter application.
 
-## Issue Tracking
-Use **beads** (`bd` command) for issue tracking. Key commands:
-```bash
-bd ready              # Show issues ready to work on
-bd list --status=open # All open issues
-bd create --title="..." --type=task|bug|feature --priority=2
-bd update <id> --status=in_progress
-bd close <id>
-bd sync               # Sync with git remote
-```
-
 ## Hardware
 - **Device**: M5Paper S3
 - **MCU**: ESP32-S3R8 (dual-core 240MHz, 8MB PSRAM, 16MB Flash)
