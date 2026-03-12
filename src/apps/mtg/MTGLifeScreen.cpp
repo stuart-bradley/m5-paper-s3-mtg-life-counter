@@ -7,7 +7,7 @@
 #include "MTGApp.hpp"
 
 MTGLifeScreen::MTGLifeScreen(MTGApp* app) : HeaderScreen("LIFE COUNTER"), _app(app) {
-    // Navigation buttons will be set up in onEnter when we know app is fully constructed
+    // Navigation buttons and toggle will be set up in onEnter
 }
 
 GameState& MTGLifeScreen::gameState() {
@@ -19,12 +19,15 @@ void MTGLifeScreen::onEnter() {
     Preferences prefs;
     gameState().load(prefs);
 
-    // Set up navigation buttons
+    // Set up navigation buttons and toggle
     setLeftButton("< HOME", []() { Navigation::instance().goHome(); });
     setRightButton("SETTINGS",
                    [this]() { Navigation::instance().pushScreen(_app->settingsScreen()); });
+    _headerBar.setToggle("LIFE", "CMDR", gameState().viewMode == ViewMode::CMDR,
+                         [this](bool cmdr) { onModeToggle(cmdr); });
 
     createPlayerCards();
+    configureCardMode();
     setNeedsFullRedraw(true);
 }
 
@@ -128,6 +131,12 @@ Rect MTGLifeScreen::getPlayerCardRect(int index, int playerCount) const {
 }
 
 void MTGLifeScreen::onUpdate() {
+    // Check delta indicator timers on all player cards
+    for (int i = 0; i < gameState().playerCount; i++) {
+        if (_playerCards[i])
+            _playerCards[i]->checkDeltaExpiry();
+    }
+
     // Auto-save periodically
     uint32_t now = millis();
     if (now - _lastSaveTime > SAVE_INTERVAL_MS) {
@@ -218,4 +227,38 @@ void MTGLifeScreen::hideKeyboard(bool confirmed) {
     }
     _editingPlayerIndex = -1;
     setNeedsFullRedraw(true);
+}
+
+void MTGLifeScreen::onModeToggle(bool cmdr) {
+    gameState().viewMode = cmdr ? ViewMode::CMDR : ViewMode::LIFE;
+    configureCardMode();
+    setNeedsFullRedraw(true);
+}
+
+void MTGLifeScreen::configureCardMode() {
+    CardMode mode = (gameState().viewMode == ViewMode::CMDR) ? CardMode::CMDR : CardMode::LIFE;
+    uint8_t pc = gameState().playerCount;
+
+    for (uint8_t t = 0; t < pc; t++) {
+        if (!_playerCards[t])
+            continue;
+        _playerCards[t]->setMode(mode);
+
+        if (mode == CardMode::CMDR) {
+            OpponentInfo opponents[GameState::MAX_PLAYERS - 1];
+            uint8_t count = 0;
+            for (uint8_t s = 0; s < pc; s++) {
+                if (s == t)
+                    continue;
+                opponents[count].name = gameState().players[s].name;
+                opponents[count].damage = &gameState().commanderDamage[t][s];
+                opponents[count].sourceIndex = s;
+                count++;
+            }
+            _playerCards[t]->setOpponents(
+                opponents, count, t, [this](uint8_t target, uint8_t source, int16_t delta) {
+                    gameState().adjustCommanderDamage(target, source, delta);
+                });
+        }
+    }
 }

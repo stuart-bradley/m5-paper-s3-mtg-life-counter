@@ -166,7 +166,18 @@ void MTGSettingsScreen::updateLifeButtonStates() {
 
 void MTGSettingsScreen::onPlayerCountSelect(uint8_t count) {
     if (gameState().playerCount != count) {
+        uint8_t oldCount = gameState().playerCount;
         gameState().playerCount = count;
+        // Zero commander damage involving removed players
+        if (count < oldCount) {
+            for (uint8_t i = 0; i < GameState::MAX_PLAYERS; i++) {
+                for (uint8_t j = 0; j < GameState::MAX_PLAYERS; j++) {
+                    if (i >= count || j >= count) {
+                        gameState().commanderDamage[i][j] = 0;
+                    }
+                }
+            }
+        }
         updatePlayerButtonStates();
         Preferences prefs;
         gameState().save(prefs);
@@ -343,7 +354,7 @@ void MTGSettingsScreen::drawConfirmDialog(M5GFX* gfx) {
     gfx->setTextSize(2);
     gfx->setTextDatum(MC_DATUM);
     const char* msg =
-        _confirmIsNewGame ? "Reset names and life totals." : "Reset all players to starting life.";
+        _confirmIsNewGame ? "Reset names and life totals." : "Reset life and commander damage?";
     gfx->drawString(msg, dialogX + dialogW / 2, dialogY + 90);
 
     // Update button positions for dialog

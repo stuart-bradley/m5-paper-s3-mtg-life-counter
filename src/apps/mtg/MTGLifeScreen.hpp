@@ -1,11 +1,11 @@
 #pragma once
 
+#include "../../models/GameState.hpp"
 #include "../../ui/HeaderScreen.hpp"
 #include "../../ui/Keyboard.hpp"
 #include "../../ui/PlayerCard.hpp"
 
 class MTGApp;
-class GameState;
 
 class MTGLifeScreen : public HeaderScreen {
    public:
@@ -22,19 +22,22 @@ class MTGLifeScreen : public HeaderScreen {
 
    private:
     MTGApp* _app;
-    PlayerCard* _playerCards[6] = {nullptr};  // MAX_PLAYERS = 6
+    PlayerCard* _playerCards[6] = {nullptr};
     Keyboard* _keyboard = nullptr;
     int8_t _editingPlayerIndex = -1;
 
     uint32_t _lastSaveTime = 0;
     static constexpr uint32_t SAVE_INTERVAL_MS = 5000;
 
-    GameState& gameState();  // Helper to access via App
+    GameState& gameState();
 
     void createPlayerCards();
     void destroyPlayerCards();
     void layoutPlayerCards();
     Rect getPlayerCardRect(int index, int playerCount) const;
+
+    void onModeToggle(bool cmdr);
+    void configureCardMode();
 
     void showKeyboard(int playerIndex);
     void hideKeyboard(bool confirmed);
