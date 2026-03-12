@@ -3,6 +3,13 @@
 ## Project Overview
 An app platform for the M5Paper S3 e-ink device featuring a home screen launcher, system settings, and a Magic: The Gathering life counter application.
 
+## Issue Tracking
+Use Claude Code's built-in Task system for issue tracking:
+- `TaskCreate` to file new tasks with enough context for future sessions
+- `TaskList` to see available work
+- `TaskUpdate` to mark progress (in_progress, completed)
+- `TaskGet` to read task details
+
 ## Hardware
 - **Device**: M5Paper S3
 - **MCU**: ESP32-S3R8 (dual-core 240MHz, 8MB PSRAM, 16MB Flash)
@@ -58,8 +65,6 @@ if (M5.Touch.getCount() > 0) {
 
 ## UI Design
 
-**Design Reference**: `ui-mockup/index.html` - Interactive HTML prototype (pixel-accurate to device)
-
 ### Visual Style: UNIX/ASCII Hacker Aesthetic
 - Monospace fonts throughout (IBM Plex Mono style)
 - Box-drawing characters for borders and frames
@@ -94,11 +99,14 @@ if (M5.Touch.getCount() > 0) {
   - 4 players: 2×2 grid
   - 5 players: 3+2 layout
   - 6 players: 2×3 grid
-- **Player Card**: Name header, large life total (VT323 font), -5/-1/+1/+5 buttons
+- **Player Card (LIFE mode)**: Name header, large life total, -5/-1/+1/+5 buttons, pending delta indicator (5s timeout)
+- **Player Card (CMDR mode)**: Compact name header (28px), opponent rows with damage value and -1/+1 buttons, lethal indicator (row inverts at 21+ damage)
+- **Header Toggle**: LIFE/CMDR toggle right-justified next to SETTINGS button. ViewMode stored on GameState (not persisted to NVS — always starts in LIFE mode)
+- **Commander Damage**: 2D matrix `commanderDamage[6][6]` where `[target][source]` tracks damage from each opponent's commander. Persisted to NVS with `"cd01"`-style keys
 - **Settings View**: Player count (2-6), starting life (20/25/30/40), player names, reset options
 - **Reset Options**:
-  - Reset Life Totals: Keep players, reset to starting life
-  - New Game: Reset everything to defaults (2 players, default names)
+  - Reset Life Totals: Reset life and commander damage to 0
+  - New Game: Reset everything to defaults (2 players, default names, zero commander damage)
 
 ### Layout Specifications
 - Screen: 960×540 pixels
@@ -116,10 +124,13 @@ if (M5.Touch.getCount() > 0) {
 4. **Persistence**: Save state to NVS (Preferences library)
 
 ### MTG Life Counter Features
-1. **Player Management**: 2-6 players, configurable names
+1. **Player Management**: 2-6 players, configurable names (tap name to edit via on-screen keyboard)
 2. **Life Tracking**: Starting life (20/25/30/40), +/- 1 and +/- 5 buttons
-3. **Reset Options**: Life-only reset vs full game reset
-4. **Large Display**: Life totals readable from distance
+3. **Commander Damage**: Per-opponent damage tracking via CMDR mode toggle, lethal at 21+
+4. **Pending Delta Indicator**: Shows cumulative life/damage change for 5 seconds after button press
+5. **Reset Options**: Life-only reset (includes commander damage) vs full game reset
+6. **Large Display**: Life totals readable from distance
+7. **Auto-save**: Periodic save to NVS every 5 seconds
 
 ## UI Guidelines
 - Large touch targets (min 44px, prefer 80px)
