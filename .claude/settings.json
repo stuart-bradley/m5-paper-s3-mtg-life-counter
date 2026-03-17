@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pio run:*)",
+      "Bash(pio test:*)",
+      "Bash(clang-format:*)",
+      "Bash(xargs clang-format:*)",
+      "Bash(tree:*)",
+      "Bash(file:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git stash clear:*)",
+      "Bash(git remote prune:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh issue:*)",
+      "Bash(python3:*)",
+      "Bash(timeout 30 pio device monitor:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.m5stack.com)"
+    ],
+    "deny": []
+  }
+}

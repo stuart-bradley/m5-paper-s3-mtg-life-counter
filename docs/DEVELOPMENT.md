@@ -375,6 +375,7 @@ Layout::MIN_TOUCH    // 44
 3. **Generate header**: Run build or `python tools/icons/convert_icons.py`
 
 4. **Use in code**:
+
    ```cpp
    #include "assets/icons.hpp"
 

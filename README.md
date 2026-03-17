@@ -4,12 +4,12 @@ An app platform for the M5Paper S3 e-ink device featuring a home screen launcher
 
 ## Screenshots
 
-| Home Screen | MTG Life Counter |
-|:-----------:|:----------------:|
+|                 Home Screen                 |                 MTG Life Counter                 |
+| :-----------------------------------------: | :----------------------------------------------: |
 | ![Home Screen](.readme-images/screen_1.JPG) | ![MTG Life Counter](.readme-images/screen_3.JPG) |
 
-| Game Settings | System Settings |
-|:-------------:|:---------------:|
+|                 Game Settings                 |                 System Settings                 |
+| :-------------------------------------------: | :---------------------------------------------: |
 | ![Game Settings](.readme-images/screen_4.JPG) | ![System Settings](.readme-images/screen_2.JPG) |
 
 ## Hardware
