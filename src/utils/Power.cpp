@@ -5,17 +5,14 @@
 namespace Power {
 
 static uint32_t lastActivityMs = 0;
-static bool imuInitialized = false;
 
 void init() {
     lastActivityMs = millis();
 
-    // Check if IMU is available
+    // Log IMU availability (device wakes on button press regardless)
     if (M5.Imu.isEnabled()) {
-        imuInitialized = true;
         LOG_I("Power: IMU enabled for motion detection");
     } else {
-        imuInitialized = false;
         LOG_I("Power: IMU not available, button wake only");
     }
 }

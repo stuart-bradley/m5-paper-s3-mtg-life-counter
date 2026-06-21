@@ -110,10 +110,6 @@ void WiFiScreen::startScan(bool showSplash) {
     LOG_D("[WiFi] Final network count: %d", (int)_networks.size());
 }
 
-void WiFiScreen::updateScanResults() {
-    // No longer used - scan is now synchronous
-}
-
 void WiFiScreen::drawScanningSplash() {
     M5GFX* gfx = &M5.Display;
 
@@ -226,12 +222,6 @@ void WiFiScreen::updateDisconnectButton() {
         Sound::click();
         startScan();
     });
-}
-
-void WiFiScreen::onUpdate() {
-    if (_scanning) {
-        updateScanResults();
-    }
 }
 
 void WiFiScreen::onHeaderFullRedraw(M5GFX* gfx) {

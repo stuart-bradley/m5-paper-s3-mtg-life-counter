@@ -1,7 +1,6 @@
 #include <M5Unified.h>
 #include <Preferences.h>
 #include <WiFi.h>
-#include "app/AppRegistry.hpp"
 #include "app/Navigation.hpp"
 #include "apps/home/HomeApp.hpp"
 #include "apps/mtg/MTGApp.hpp"
@@ -78,24 +77,20 @@ void setup() {
         tryWifiAutoConnect();
     }
 
-    // Register apps with the registry
-    auto& registry = AppRegistry::instance();
-    registry.registerApp(&homeApp);
-    registry.registerApp(&mtgApp);
-    registry.registerApp(&settingsApp);
+    // Register apps (home is the non-launcher app)
+    auto& nav = Navigation::instance();
+    nav.registerApp(&homeApp);
+    nav.registerApp(&mtgApp);
+    nav.registerApp(&settingsApp);
 
-    // Restore previous navigation state or go home
-    Navigation::instance().restoreState();
+    // Start on the home launcher
+    nav.goHome();
 
     LOG_I("Setup complete. Starting main loop.");
 }
 
 void enterSleepMode() {
     LOG_I("Entering sleep mode...");
-
-    // Save navigation state before sleep
-    Navigation::instance().saveState();
-
     Power::powerOff();
 }
 

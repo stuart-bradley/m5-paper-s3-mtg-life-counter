@@ -1,19 +1,20 @@
 #pragma once
 
-#include "../platform/Device.hpp"
+#include <cstdint>
 
+// M5Paper S3, landscape: 960x540.
 namespace Layout {
 // Screen dimensions
 constexpr int16_t screenW() {
-    return Device::SCREEN_WIDTH;
+    return 960;
 }
 constexpr int16_t screenH() {
-    return Device::SCREEN_HEIGHT;
+    return 540;
 }
 
 // Standard heights
-constexpr int16_t TOOLBAR_H = Device::TOOLBAR_HEIGHT;
-constexpr int16_t HEADER_H = Device::HEADER_HEIGHT;
+constexpr int16_t TOOLBAR_H = 32;
+constexpr int16_t HEADER_H = 44;
 
 // Content area (below toolbar only)
 constexpr int16_t contentY() {
@@ -45,7 +46,7 @@ constexpr int16_t MARGIN_M = 8;
 constexpr int16_t MARGIN_L = 20;
 
 // Touch
-constexpr int16_t MIN_TOUCH = Device::MIN_TOUCH_TARGET;
+constexpr int16_t MIN_TOUCH = 44;
 
 // Standard button sizes
 constexpr int16_t BUTTON_W = 90;

@@ -1,18 +1,50 @@
 #include "Navigation.hpp"
-#include <Preferences.h>
-#include <cstring>
 #include "../ui/Screen.hpp"
 #include "../utils/Log.hpp"
 #include "App.hpp"
-#include "AppRegistry.hpp"
-
-static constexpr const char* PREF_NAMESPACE = "nav";
-static constexpr const char* PREF_APP_ID = "appId";
-static constexpr const char* PREF_SCREEN_ID = "screenId";
 
 Navigation& Navigation::instance() {
     static Navigation nav;
     return nav;
+}
+
+void Navigation::registerApp(App* app) {
+    if (!app) {
+        LOG_W("Navigation: Attempted to register null app");
+        return;
+    }
+    if (_appCount >= MAX_APPS) {
+        LOG_E("Navigation: Cannot register app '%s' - MAX_APPS (%d) exceeded",
+              app->metadata().id, MAX_APPS);
+        return;
+    }
+    _apps[_appCount++] = app;
+    if (!app->metadata().showInLauncher) {
+        _homeApp = app;
+    }
+}
+
+int Navigation::launchableAppCount() const {
+    int count = 0;
+    for (int i = 0; i < _appCount; i++) {
+        if (_apps[i]->metadata().showInLauncher) {
+            count++;
+        }
+    }
+    return count;
+}
+
+App* Navigation::getLaunchableApp(int index) {
+    int seen = 0;
+    for (int i = 0; i < _appCount; i++) {
+        if (_apps[i]->metadata().showInLauncher) {
+            if (seen == index) {
+                return _apps[i];
+            }
+            seen++;
+        }
+    }
+    return nullptr;
 }
 
 Screen* Navigation::currentScreen() const {
@@ -57,15 +89,6 @@ void Navigation::launchApp(App* app) {
         mainScreen->onEnter();
         mainScreen->setNeedsFullRedraw(true);
     }
-
-    saveState();
-}
-
-void Navigation::launchApp(const char* appId) {
-    App* app = AppRegistry::instance().findApp(appId);
-    if (app) {
-        launchApp(app);
-    }
 }
 
 void Navigation::exitApp() {
@@ -73,9 +96,8 @@ void Navigation::exitApp() {
 }
 
 void Navigation::goHome() {
-    App* home = AppRegistry::instance().homeApp();
-    if (home && home != _currentApp) {
-        launchApp(home);
+    if (_homeApp && _homeApp != _currentApp) {
+        launchApp(_homeApp);
     }
 }
 
@@ -93,8 +115,6 @@ void Navigation::pushScreen(Screen* screen) {
     _screenStack[_stackDepth++] = screen;
     screen->onEnter();
     screen->setNeedsFullRedraw(true);
-
-    saveState();
 }
 
 void Navigation::popScreen() {
@@ -118,7 +138,6 @@ void Navigation::popScreen() {
         prev->onEnter();
         prev->setNeedsFullRedraw(true);
     }
-    saveState();
 }
 
 void Navigation::update() {
@@ -141,50 +160,4 @@ bool Navigation::handleTouch(int16_t x, int16_t y, bool pressed, bool released) 
         return screen->handleTouch(x, y, pressed, released);
     }
     return false;
-}
-
-void Navigation::saveState() {
-    Preferences prefs;
-    prefs.begin(PREF_NAMESPACE, false);
-
-    if (_currentApp) {
-        prefs.putString(PREF_APP_ID, _currentApp->metadata().id);
-
-        // Save screen identifier for restore using Screen::screenId()
-        Screen* screen = currentScreen();
-        if (screen) {
-            prefs.putString(PREF_SCREEN_ID, screen->screenId());
-        }
-    }
-
-    prefs.end();
-}
-
-void Navigation::restoreState() {
-    Preferences prefs;
-    prefs.begin(PREF_NAMESPACE, true);  // Read-only
-
-    String appId = prefs.getString(PREF_APP_ID, "home");
-    String screenId = prefs.getString(PREF_SCREEN_ID, "main");
-    prefs.end();
-
-    LOG_D("[Nav] Restoring: app='%s', screen='%s'", appId.c_str(), screenId.c_str());
-
-    // Find and launch the app
-    App* app = AppRegistry::instance().findApp(appId.c_str());
-    if (!app) {
-        app = AppRegistry::instance().homeApp();
-    }
-
-    if (app) {
-        launchApp(app);
-
-        // If screen is not "main", try to push the specific screen
-        if (screenId != "main") {
-            Screen* screen = app->getScreen(screenId.c_str());
-            if (screen) {
-                pushScreen(screen);
-            }
-        }
-    }
 }

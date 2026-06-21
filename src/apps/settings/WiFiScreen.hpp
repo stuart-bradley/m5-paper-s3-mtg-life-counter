@@ -19,13 +19,10 @@ class WiFiScreen : public HeaderScreen {
    public:
     explicit WiFiScreen(SettingsApp* app);
 
-    const char* screenId() const override { return "wifi"; }
-
     void onEnter() override;
     void onExit() override;
 
    protected:
-    void onUpdate() override;
     void onHeaderFullRedraw(M5GFX* gfx) override;
     bool onDraw(M5GFX* gfx) override;
     bool onTouch(int16_t x, int16_t y, bool pressed, bool released) override;
@@ -48,7 +45,6 @@ class WiFiScreen : public HeaderScreen {
     String _pendingSSID;
 
     void startScan(bool showSplash = true);
-    void updateScanResults();
     void connectToNetwork(const String& ssid, const String& password);
     void disconnectFromNetwork();
     void updateDisconnectButton();

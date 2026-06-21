@@ -16,7 +16,6 @@ class MTGApp : public App {
     void onSuspend() override;
 
     Screen* getMainScreen() override { return &_lifeScreen; }
-    Screen* getScreen(const char* id) override;
 
     // State access for screens
     GameState& gameState() { return _gameState; }

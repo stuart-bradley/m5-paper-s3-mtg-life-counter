@@ -16,7 +16,6 @@ class SettingsApp : public App {
     void onSuspend() override;
 
     Screen* getMainScreen() override { return &_systemScreen; }
-    Screen* getScreen(const char* id) override;
 
     // State access for screens
     Settings& settings() { return _settings; }
