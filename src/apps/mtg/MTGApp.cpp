@@ -1,6 +1,5 @@
 #include "MTGApp.hpp"
 #include <Preferences.h>
-#include <cstring>
 
 // Define static constexpr member (required for ODR-use)
 constexpr AppMetadata MTGApp::_metadata;
@@ -15,11 +14,4 @@ void MTGApp::onLaunch() {
 void MTGApp::onSuspend() {
     Preferences prefs;
     _gameState.save(prefs);
-}
-
-Screen* MTGApp::getScreen(const char* id) {
-    if (strcmp(id, "settings") == 0) {
-        return &_settingsScreen;
-    }
-    return nullptr;
 }

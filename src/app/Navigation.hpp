@@ -9,9 +9,13 @@ class Navigation {
    public:
     static Navigation& instance();
 
+    // App registration (called once at startup). The non-launcher app is the home app.
+    void registerApp(App* app);
+    int launchableAppCount() const;
+    App* getLaunchableApp(int index);
+
     // App launching
     void launchApp(App* app);
-    void launchApp(const char* appId);
     void exitApp();
     void goHome();
 
@@ -28,12 +32,13 @@ class Navigation {
     App* currentApp() const { return _currentApp; }
     Screen* currentScreen() const;
 
-    // State persistence
-    void saveState();
-    void restoreState();
-
    private:
     Navigation() = default;
+
+    static constexpr int MAX_APPS = 8;
+    App* _apps[MAX_APPS] = {nullptr};
+    int _appCount = 0;
+    App* _homeApp = nullptr;
 
     App* _currentApp = nullptr;
     static constexpr int MAX_DEPTH = 4;

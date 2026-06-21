@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../platform/Device.hpp"
 #include "Component.hpp"
+#include "Layout.hpp"
 
 class Toolbar : public Component {
    public:
-    static constexpr int16_t HEIGHT = Device::TOOLBAR_HEIGHT;
+    static constexpr int16_t HEIGHT = Layout::TOOLBAR_H;
 
     Toolbar();
 

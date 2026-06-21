@@ -6,9 +6,6 @@ class Screen {
    public:
     virtual ~Screen() = default;
 
-    // Screen identification for save/restore
-    virtual const char* screenId() const { return "main"; }
-
     // Lifecycle
     virtual void onEnter() {}
     virtual void onExit() {}

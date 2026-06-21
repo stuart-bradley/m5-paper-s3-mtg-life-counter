@@ -24,11 +24,4 @@ class App {
 
     // Screen access - screens are cached, not created each time
     virtual Screen* getMainScreen() = 0;
-    virtual Screen* getScreen(const char* screenId) {
-        (void)screenId;
-        return nullptr;
-    }
-
-    // Internal navigation - return true if handled, false to pop/exit
-    virtual bool handleBack() { return false; }
 };

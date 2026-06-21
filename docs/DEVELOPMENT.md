@@ -13,16 +13,16 @@ This guide covers the architecture and development workflow for the M5Paper S3 a
                             │
 ┌───────────────────────────▼─────────────────────────────────┐
 │                       Navigation                            │
+│  - App registry + launcher list                             │
 │  - App launching/switching                                  │
 │  - Screen stack management                                  │
-│  - State persistence                                        │
 └───────────────────────────┬─────────────────────────────────┘
                             │
 ┌───────────────────────────▼─────────────────────────────────┐
 │                          App                                │
 │  - Owns screens and state                                   │
 │  - Lifecycle: onLaunch(), onSuspend()                       │
-│  - Provides screens via getMainScreen(), getScreen()        │
+│  - Provides its main screen via getMainScreen()             │
 └───────────────────────────┬─────────────────────────────────┘
                             │
 ┌───────────────────────────▼─────────────────────────────────┐
@@ -37,8 +37,7 @@ This guide covers the architecture and development workflow for the M5Paper S3 a
 
 - **App**: Contains related screens and shared state. Apps are long-lived singletons registered at startup.
 - **Screen**: A single view within an app. Screens are owned by their App and can be pushed/popped via Navigation.
-- **Navigation**: Singleton managing the active app and screen stack. Handles back navigation and state persistence.
-- **AppRegistry**: Maintains list of all registered apps for the home screen launcher.
+- **Navigation**: Singleton owning the registered apps, the active app, and the screen stack. Handles app launching, the home-screen launcher list, and back navigation. Boots to the home screen.
 
 ## Creating a New App
 
@@ -201,13 +200,13 @@ static MyApp myApp;
 void setup() {
     // ... existing setup ...
 
-    auto& registry = AppRegistry::instance();
-    registry.registerApp(&homeApp);
-    registry.registerApp(&myApp);  // Add your app
-    registry.registerApp(&mtgApp);
-    registry.registerApp(&settingsApp);
+    auto& nav = Navigation::instance();
+    nav.registerApp(&homeApp);
+    nav.registerApp(&myApp);  // Add your app
+    nav.registerApp(&mtgApp);
+    nav.registerApp(&settingsApp);
 
-    // ...
+    nav.goHome();
 }
 ```
 
@@ -245,6 +244,9 @@ public:
     bool needsFullRedraw() const;
 };
 ```
+
+Sub-screens are reached via `Navigation::pushScreen(...)` and `popScreen()`; there is no
+screen-position persistence, so the device always boots to the home launcher.
 
 ### ToolbarScreen
 

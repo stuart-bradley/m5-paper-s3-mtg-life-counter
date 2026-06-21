@@ -1,5 +1,5 @@
 #include "HomeScreen.hpp"
-#include "../../app/AppRegistry.hpp"
+#include "../../app/App.hpp"
 #include "../../app/Navigation.hpp"
 #include "../../assets/icons.hpp"
 #include "../../ui/Layout.hpp"
@@ -36,11 +36,11 @@ void HomeScreen::drawAppCard(M5GFX* gfx, Rect r, const uint8_t* icon, const char
 }
 
 void HomeScreen::onFullRedraw(M5GFX* gfx) {
-    auto& registry = AppRegistry::instance();
-    int appCount = registry.launchableAppCount();
+    auto& nav = Navigation::instance();
+    int appCount = nav.launchableAppCount();
 
     for (int i = 0; i < appCount; i++) {
-        App* app = registry.getLaunchableApp(i);
+        App* app = nav.getLaunchableApp(i);
         if (app) {
             Rect r = getAppCardRect(i, appCount);
             drawAppCard(gfx, r, app->metadata().icon, app->metadata().name);
@@ -52,13 +52,13 @@ bool HomeScreen::handleTouch(int16_t x, int16_t y, bool pressed, bool released) 
     if (!released)
         return pressed;
 
-    auto& registry = AppRegistry::instance();
-    int appCount = registry.launchableAppCount();
+    auto& nav = Navigation::instance();
+    int appCount = nav.launchableAppCount();
 
     for (int i = 0; i < appCount; i++) {
         Rect r = getAppCardRect(i, appCount);
         if (r.contains(x, y)) {
-            App* app = registry.getLaunchableApp(i);
+            App* app = nav.getLaunchableApp(i);
             if (app) {
                 Sound::click();
                 Navigation::instance().launchApp(app);
